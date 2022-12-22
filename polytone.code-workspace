@@ -1,0 +1,14 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "cSpell.words": [
+      "polytone",
+      "radioprotector"
+    ]
+  }
+}
