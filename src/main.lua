@@ -10,11 +10,26 @@ import 'sprite_component'
 local C <const> = require 'constants'
 
 local gfx <const> = playdate.graphics
+local font <const> = gfx.font
+local geo <const> = playdate.geometry
 local timer <const> = playdate.timer
 
-local RING_COUNT <const> = 8
 local RINGS <const> = {}
 local RING_SPRITES <const> = {}
+
+local screen_height <const> = playdate.display.getHeight()
+local DEMO_HEX_LARGE_RADIUS <const> = 12
+local DEMO_HEX_SMALL_RADIUS <const> = 6
+local DEMO_HEX_TEXT_BOX_WIDTH = 20
+local DEMO_HEX_TEXT_BOX_HEIGHT = 20
+local DEMO_HEX_TEXT_OFFSET_Y_LARGE = 2
+local DEMO_HEX_TEXT_OFFSET_Y_SMALL = screen_height - DEMO_HEX_TEXT_BOX_HEIGHT
+local DEMO_HEX_TEXT_OFFSET_X <const> = 2 + (DEMO_HEX_LARGE_RADIUS * 2)
+local demo_hex_large = nil
+local demo_hex_large_text_rect = nil
+local demo_hex_small = nil
+local demo_hex_small_text_rect = nil
+local demo_hex_line = nil
 
 local has_ring_velocity = false
 local selected_ring = 1
@@ -33,6 +48,38 @@ local function loadGame()
 
   -- Mark the first ring as selected
   RINGS[selected_ring].selected = true
+
+  -- Generate hexes for display
+  demo_hex_large = geo.polygon.new(C.POLYGON_VERTICES)
+  demo_hex_small = geo.polygon.new(C.POLYGON_VERTICES)
+
+  for i = 1, C.POLYGON_VERTICES do
+    local vertex_angle_rad <const> = C.POLYGON_VERTEX_RADIANS[i]
+    local x <const> = math.cos(vertex_angle_rad)
+    local y <const> = math.sin(vertex_angle_rad)
+
+    demo_hex_large:setPointAt(i, (x * DEMO_HEX_LARGE_RADIUS), (y * DEMO_HEX_LARGE_RADIUS))
+    demo_hex_small:setPointAt(i, (x * DEMO_HEX_SMALL_RADIUS), (y * DEMO_HEX_SMALL_RADIUS))
+
+    -- Ensure the last vertex closes the polygon
+    if i == 1 then
+      demo_hex_large:setPointAt(C.POLYGON_VERTICES + 1, (x * DEMO_HEX_LARGE_RADIUS), (y * DEMO_HEX_LARGE_RADIUS))
+      demo_hex_small:setPointAt(C.POLYGON_VERTICES + 1, (x * DEMO_HEX_SMALL_RADIUS), (y * DEMO_HEX_SMALL_RADIUS))
+    end
+  end
+
+  local center_x_large, center_y_large = DEMO_HEX_LARGE_RADIUS, DEMO_HEX_LARGE_RADIUS
+  local center_x_small = DEMO_HEX_SMALL_RADIUS + (DEMO_HEX_LARGE_RADIUS - DEMO_HEX_SMALL_RADIUS)
+  local center_y_small = screen_height - DEMO_HEX_LARGE_RADIUS
+
+  demo_hex_large:close()
+  demo_hex_large:translate(center_x_large, center_y_large)
+  demo_hex_small:close()
+  demo_hex_small:translate(center_x_small, center_y_small)
+
+  demo_hex_line = geo.lineSegment.new(center_x_large, center_y_large, center_x_small, center_y_small)
+  demo_hex_large_text_rect = geo.rect.new(DEMO_HEX_TEXT_OFFSET_X, DEMO_HEX_TEXT_OFFSET_Y_LARGE, DEMO_HEX_TEXT_BOX_WIDTH, DEMO_HEX_TEXT_BOX_HEIGHT)
+  demo_hex_small_text_rect = geo.rect.new(DEMO_HEX_TEXT_OFFSET_X, DEMO_HEX_TEXT_OFFSET_Y_SMALL, DEMO_HEX_TEXT_BOX_WIDTH, DEMO_HEX_TEXT_BOX_HEIGHT)
 
   -- Add a crank indicator
   playdate.ui.crankIndicator:start()
@@ -130,8 +177,24 @@ end
 
 local function drawGame()
   gfx.setBackgroundColor(gfx.kColorBlack)
+  gfx.setColor(gfx.kColorWhite)
+  gfx.setFont(font.kVariantNormal)
+  gfx.setLineWidth(2)
   gfx.clear()
+
+  -- Update all other sprites
   gfx.sprite.update()
+
+  -- Draw guidance
+  gfx.drawLine(demo_hex_line)
+
+  gfx.fillPolygon(demo_hex_large)
+  gfx.fillRoundRect(demo_hex_large_text_rect, 2)
+  gfx.drawTextInRect('⬆️', demo_hex_large_text_rect, nil, nil, kTextAlignment.center)
+
+  gfx.fillPolygon(demo_hex_small)
+  gfx.fillRoundRect(demo_hex_small_text_rect, 2)
+  gfx.drawTextInRect('⬇️', demo_hex_small_text_rect, nil, nil, kTextAlignment.center)
 
   -- This needs to go after all sprites are updated
   if not has_ring_velocity and playdate.isCrankDocked() then
