@@ -20,25 +20,29 @@ local SPRITE_RADII <const> = {16, 32, 48, 64, 80, 96, 112, 128}
 local RING_FILLS <const> = {
   'white',
   'lightgray',
-  'gray-1',
-  'gray-3',
-  'gray-4',
+  {0xFF, 0x5D, 0xFF, 0x77, 0xFF, 0xD5, 0xFF, 0x77}, -- formerly 'gray-1'
+  {0xFF, 0x55, 0xFF, 0x55, 0xFF, 0x55, 0xFF, 0x55}, -- formerly 'gray-3'
   'gray',
-  'darkgray-1',
+  {0x0, 0xAA, 0x0, 0xAA, 0x0, 0xAA, 0x0, 0xAA}, -- formerly 'gray-4'
+  {0x0, 0xA2, 0x0, 0x88, 0x0, 0x2A, 0x0, 0x88}, -- formerly 'darkgray-1'
   'darkgray'
 }
 
 local selected_fill_index = 1
 local selected_fill_frame_timer = 0
-local SELECTED_FILLS_LENGTH <const> = 6
+local SELECTED_FILLS_LENGTH <const> = 10
 local SELECTED_FILLS_CYCLE_FRAMES <const> = 9
 local SELECTED_FILLS <const> = {
   'white',
-  'hline-1',
-  'hline-2',
-  'hline-4',
-  'hline-2',
-  'hline-1'
+  'lightgray',
+  'gray',
+  'darkgray',
+  'black',
+  'black',
+  'darkgray',
+  'gray',
+  'lightgray',
+  'white'
 }
 
 class('SpriteComponent').extends()
@@ -100,7 +104,7 @@ function SpriteComponent:update()
     -- First stroke the polygon
     if self.ring.selected then
       gfx.setLineWidth(4)
-      gfx.setColor(gfx.kColorXOR)
+      gfx.setColor(gfx.kColorWhite)
     else
       gfx.setLineWidth(2)
       gfx.setColor(gfx.kColorBlack)
@@ -109,7 +113,11 @@ function SpriteComponent:update()
     gfx.setStrokeLocation(gfx.kStrokeCentered)
     gfx.drawPolygon(self.polygon)
 
-    -- Then fill the polygon with a pattern
+    -- Then fill the polygon with a pattern.
+    -- By default, each ring has its own fill style, but we have special handling
+    -- for the currently-selected ring.
+    local poly_fill = RING_FILLS[self.ring.layer]
+
     if self.ring.selected then
       -- Use a rudimentary timer to cycle through special fills for the selected ring
       selected_fill_frame_timer = selected_fill_frame_timer + 1
@@ -125,9 +133,15 @@ function SpriteComponent:update()
         end
       end
 
-      gfxp.set(SELECTED_FILLS[selected_fill_index])
+      poly_fill = SELECTED_FILLS[selected_fill_index]
+    end
+
+    -- If this is a string value, interpret it as a GFXP string.
+    -- Otherwise, assume it's a table
+    if type(poly_fill) == "string" then
+      gfxp.set(poly_fill)
     else
-      gfxp.set(RING_FILLS[self.ring.layer])
+      gfx.setPattern(poly_fill)
     end
 
     gfx.fillPolygon(self.polygon)
