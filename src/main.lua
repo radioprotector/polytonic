@@ -4,8 +4,10 @@ import 'CoreLibs/sprites'
 import 'CoreLibs/ui'
 import 'CoreLibs/timer'
 
+import 'glue'
 import 'ring'
 import 'sprite_component'
+local C <const> = require 'constants'
 
 local gfx <const> = playdate.graphics
 local timer <const> = playdate.timer
@@ -24,7 +26,7 @@ local function loadGame()
   math.randomseed(playdate.getSecondsSinceEpoch()) -- seed for math.random
 
   -- Generate rings and sprite components for each ring
-  for i = 1, RING_COUNT do
+  for i = 1, C.RING_COUNT do
     RINGS[i] = Ring(i)
     RING_SPRITES[i] = SpriteComponent(RINGS[i])
   end
@@ -46,13 +48,13 @@ local function changeSelectedRing(new_ring)
     end
 
     new_ring = 1
-  elseif new_ring > RING_COUNT + 1 then
+  elseif new_ring > C.RING_COUNT + 1 then
     if not allow_ring_snapback then
       return
     end
 
-    new_ring = RING_COUNT
-  elseif new_ring == 0 or new_ring == RING_COUNT + 1 then
+    new_ring = C.RING_COUNT
+  elseif new_ring == 0 or new_ring == C.RING_COUNT + 1 then
     -- Prevent snapping back until we actually let go of the key
     allow_ring_snapback = false
   end

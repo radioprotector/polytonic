@@ -1,10 +1,8 @@
 import 'CoreLibs/object'
 import 'CoreLibs/timer'
 
-local FULL_RADIANS <const> = 2 * math.pi
-local VELOCITY_MAX <const> = 4 * math.pi
-local VELOCITY_MIN <const> = 0.01 * math.pi
-local DECAY_SECONDS <const> = 30
+import 'glue'
+local C <const> = require 'constants'
 
 class('Ring').extends()
 
@@ -26,20 +24,16 @@ end
 
 function Ring:addVelocity(change_deg)
   -- Convert change radians to change degrees and make it more difficult as the layer moves outward
-  local change_rad = (change_deg / FULL_RADIANS) / self.inertia
+  local change_rad = (change_deg / C.TWO_PI) / self.inertia
 
   self.angle_velocity = self.angle_velocity + change_rad
 
   -- Clamp the velocity
-  if self.angle_velocity > VELOCITY_MAX then
-    self.angle_velocity = VELOCITY_MAX
-  elseif self.angle_velocity < -VELOCITY_MAX then
-    self.angle_velocity = -VELOCITY_MAX
-  end
+  self.angle_velocity = math.min(C.VELOCITY_MAX, math.max(-C.VELOCITY_MAX, self.angle_velocity))
 end
 
 function Ring:update()
-  -- Don't bother if this is already still
+  -- Don't bother if this isn't moving
   if self.angle_velocity == 0 then
     return
   end
@@ -49,14 +43,14 @@ function Ring:update()
   -- Update the angular position based on the velocity, normalized by the number of frames
   self.angle_rad = self.angle_rad + (self.angle_velocity / refreshRate)
 
-  if self.angle_rad > FULL_RADIANS then
-    self.angle_rad = self.angle_rad - FULL_RADIANS
+  if self.angle_rad > C.TWO_PI then
+    self.angle_rad = self.angle_rad - C.TWO_PI
   end
 
   -- Dampen the velocity towards zero
-  self.angle_velocity = self.angle_velocity - (self.angle_velocity / (self.inertia * refreshRate * DECAY_SECONDS))
+  self.angle_velocity = self.angle_velocity - (self.angle_velocity / (self.inertia * refreshRate * C.VELOCITY_DECAY_SECONDS))
 
-  if math.abs(self.angle_velocity) < VELOCITY_MIN then
+  if math.abs(self.angle_velocity) < C.VELOCITY_MIN then
     self.angle_velocity = 0
   end
 end

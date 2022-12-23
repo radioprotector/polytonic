@@ -3,20 +3,13 @@ import 'CoreLibs/graphics'
 import 'CoreLibs/sprites'
 import 'lib/gfxp'
 
-local pd <const> = playdate
-local gfx <const> = pd.graphics
-local geo <const> = pd.geometry
+import 'glue'
+local C <const> = require 'constants'
+local gfx <const> = playdate.graphics
+local geo <const> = playdate.geometry
 local gfxp <const> = GFXP
 
-local POLYGON_VERTICES <const> = 6
-local THIRD_PI <const> = math.pi / 3
-local VERTEX_RADIAN_OFFSETS <const> = {0, THIRD_PI, 2 * THIRD_PI, math.pi, 4 * THIRD_PI, 5 * THIRD_PI, 0}
-
-local CENTER_X <const> = 200
-local CENTER_Y <const> = 120
-
 local BASE_SPRITE_ZINDEX <const> = 1000
-local SPRITE_RADII <const> = {16, 32, 48, 64, 80, 96, 112, 128}
 local RING_FILLS <const> = {
   'white',
   'lightgray',
@@ -50,7 +43,7 @@ class('SpriteComponent').extends()
 function SpriteComponent:init(ring)
   SpriteComponent.super.init(self)
   self.ring = ring
-  self.radius = SPRITE_RADII[ring.layer]
+  self.radius = C.POLYGON_RADII[ring.layer]
 
   if not self.radius then
     print("invalid ring! layer #" .. ring.layer)
@@ -59,7 +52,7 @@ function SpriteComponent:init(ring)
 
   -- Create a polygon and an image to draw it to.
   -- Add an extra vertex to close the polygon.
-  self.polygon = geo.polygon.new(POLYGON_VERTICES + 1)
+  self.polygon = geo.polygon.new(C.POLYGON_VERTICES + 1)
   self.image = gfx.image.new(self.radius * 2, self.radius * 2)
 
   -- Initialize a sprite to use this image.
@@ -67,7 +60,7 @@ function SpriteComponent:init(ring)
   self.sprite = gfx.sprite.new(self.image)
   self.sprite:setCenter(0, 0)
   self.sprite:setZIndex(BASE_SPRITE_ZINDEX - ((self.ring.layer - 1) * 100))
-  self.sprite:moveTo(CENTER_X - self.radius, CENTER_Y - self.radius)
+  self.sprite:moveTo(C.CENTER_X - self.radius, C.CENTER_Y - self.radius)
   self.sprite:add()
 end
 
@@ -78,11 +71,11 @@ function SpriteComponent:update()
 
   local base_angle_rad <const> = self.ring.angle_rad
 
-  for i = 1, POLYGON_VERTICES do
+  for i = 1, C.POLYGON_VERTICES do
     -- Map each vertex to its coordinates on the unit circle.
     -- Ensure the y-coordinate is flipped so the vertices are ordered counter-clockwise around the unit circle.
     -- To center the vertices within the bounding box, ensure that each point is translated by the radius.
-    local vertex_angle_rad = base_angle_rad + VERTEX_RADIAN_OFFSETS[i]
+    local vertex_angle_rad = base_angle_rad + C.POLYGON_VERTEX_RADIANS[i]
     local x = (self.radius * math.cos(vertex_angle_rad)) + self.radius
     local y = (-self.radius * math.sin(vertex_angle_rad)) + self.radius
 
@@ -90,7 +83,7 @@ function SpriteComponent:update()
 
     -- Ensure that the start and end points coincide
     if i == 1 then
-      self.polygon:setPointAt(POLYGON_VERTICES + 1, x, y)
+      self.polygon:setPointAt(C.POLYGON_VERTICES + 1, x, y)
     end
   end
 
