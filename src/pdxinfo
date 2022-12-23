@@ -4,3 +4,4 @@ description=CHANGEME
 bundleID=com.radioprotector.polytone
 version=0.0.1
 buildNumber=1
+imagePath=assets/images

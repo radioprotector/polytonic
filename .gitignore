@@ -1,5 +1,7 @@
 # Ignore Playdate builds
 build/*
+.sentry-native/*
+Games/*
 
 # https://github.com/github/gitignore/blob/main/Lua.gitignore
 # Compiled Lua sources
