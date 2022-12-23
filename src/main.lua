@@ -15,8 +15,9 @@ local RINGS <const> = {}
 local RING_SPRITES <const> = {}
 
 local selected_ring = 1
-local upDirectionKeyTimer = nil
-local downDirectionKeyTimer = nil
+local allow_ring_snapback = false
+local up_key_timer = nil
+local down_key_timer = nil
 
 local function loadGame()
   math.randomseed(playdate.getSecondsSinceEpoch()) -- seed for math.random
@@ -36,12 +37,35 @@ local function loadGame()
 end
 
 local function changeSelectedRing(new_ring)
-  if new_ring < 1 or new_ring > RING_COUNT then
-    return
+  -- Allow us to move *one* outside the ring count for a "clean" appearance.
+  -- If we try to move further, re-toggle the outermost/innermost ring, so long as we support snapping back
+  if new_ring < 0 then
+    if not allow_ring_snapback then
+      return
+    end
+
+    new_ring = 1
+  elseif new_ring > RING_COUNT + 1 then
+    if not allow_ring_snapback then
+      return
+    end
+
+    new_ring = RING_COUNT
+  elseif new_ring == 0 or new_ring == RING_COUNT + 1 then
+    -- Prevent snapping back until we actually let go of the key
+    allow_ring_snapback = false
   end
 
-  RINGS[selected_ring].selected = false
-  RINGS[new_ring].selected = true
+  -- Deselect the old ring, if valid
+  if RINGS[selected_ring] then
+    RINGS[selected_ring].selected = false
+  end
+
+  -- Select the new ring, if valid
+  if RINGS[new_ring] then
+    RINGS[new_ring].selected = true
+  end
+
   selected_ring = new_ring
 end
 
@@ -50,11 +74,14 @@ function playdate.upButtonDown()
     changeSelectedRing(selected_ring + 1)
   end
 
-  upDirectionKeyTimer = timer.keyRepeatTimer(upButtonTimerCallback)
+  up_key_timer = timer.keyRepeatTimer(upButtonTimerCallback)
 end
 
 function playdate.upButtonUp()
-  upDirectionKeyTimer:remove()
+  up_key_timer:remove()
+
+  -- Allow snapping back now that we've let go of the key
+  allow_ring_snapback = true
 end
 
 function playdate.downButtonDown()
@@ -62,19 +89,23 @@ function playdate.downButtonDown()
     changeSelectedRing(selected_ring - 1)
   end
 
-  downDirectionKeyTimer = timer.keyRepeatTimer(downButtonTimerCallback)
+  down_key_timer = timer.keyRepeatTimer(downButtonTimerCallback)
 end
 
 function playdate.downButtonUp()
-  downDirectionKeyTimer:remove()
+  down_key_timer:remove()
+
+  -- Allow snapping back now that we've let go of the key
+  allow_ring_snapback = true
 end
 
 local function updateGame()
   -- See if the crank will accelerate or decelerate
   local change, acceleratedChange = playdate.getCrankChange()
 
-  if change ~= 0 then
-    RINGS[selected_ring]:addVelocity(acceleratedChange)
+  if change ~= 0 and RINGS[selected_ring] then
+    -- Invert the change to turn counter-clockwise radians to clockwise motion
+    RINGS[selected_ring]:addVelocity(-acceleratedChange)
   end
 
   -- Update each ring
