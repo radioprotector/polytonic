@@ -19,7 +19,7 @@ function Ring:init(layer)
     self.angle_rad = math.pi / 2
   end
 
-  printTable(self)
+  -- printTable(self)
 end
 
 function Ring:addVelocity(change_deg)

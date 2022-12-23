@@ -6,6 +6,7 @@ import 'CoreLibs/timer'
 import 'glue'
 import 'ring'
 import 'sprite_component'
+import 'sound_component'
 import 'ui_component'
 local C <const> = require 'constants'
 
@@ -14,6 +15,7 @@ local timer <const> = playdate.timer
 
 local RINGS <const> = {}
 local RING_SPRITES <const> = {}
+local RING_SOUNDS <const> = {}
 local UI_COMPONENT = nil
 
 local selected_ring = 1
@@ -30,6 +32,7 @@ local function loadGame()
   for i = 1, C.RING_COUNT do
     RINGS[i] = Ring(i)
     RING_SPRITES[i] = SpriteComponent(RINGS[i])
+    RING_SOUNDS[i] = SoundComponent(RINGS[i])
   end
 
   -- Mark the first ring as selected
@@ -153,6 +156,11 @@ local function updateGame()
 
   -- Update the sprite components associated with the rings
   for _, value in pairs(RING_SPRITES) do
+    value:update()
+  end
+
+  -- Update the sound components associated with the rings
+  for _, value in pairs(RING_SOUNDS) do
     value:update()
   end
 
