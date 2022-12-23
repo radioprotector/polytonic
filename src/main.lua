@@ -14,6 +14,7 @@ local RING_COUNT <const> = 8
 local RINGS <const> = {}
 local RING_SPRITES <const> = {}
 
+local has_ring_velocity = false
 local selected_ring = 1
 local allow_ring_snapback = false
 local up_key_timer = nil
@@ -109,8 +110,14 @@ local function updateGame()
   end
 
   -- Update each ring
+  has_ring_velocity = false
+
   for _, value in pairs(RINGS) do
     value:update()
+
+    if value.angle_velocity ~= 0 then
+      has_ring_velocity = true
+    end
   end
 
   -- Update the sprite components associated with the rings
@@ -122,8 +129,10 @@ end
 local function drawGame()
   gfx.setBackgroundColor(gfx.kColorBlack)
   gfx.clear()
+  gfx.sprite.update()
 
-  if playdate.isCrankDocked() then
+  -- This needs to go after all sprites are updated
+  if not has_ring_velocity and playdate.isCrankDocked() then
     playdate.ui.crankIndicator:update()
   end
 end
@@ -134,6 +143,5 @@ function playdate.update()
   updateGame()
   drawGame()
 
-  gfx.sprite.update()
   timer.updateTimers()
 end
