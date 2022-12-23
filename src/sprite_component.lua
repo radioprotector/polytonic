@@ -17,57 +17,28 @@ local CENTER_Y <const> = 120
 
 local BASE_SPRITE_ZINDEX <const> = 1000
 local SPRITE_RADII <const> = {16, 32, 48, 64, 80, 96, 112, 128}
-local SIMPLE_SPRITE_FILLS <const> = {
+local RING_FILLS <const> = {
+  'white',
   'lightgray',
-  'lightgray-1',
   'gray-1',
   'gray-3',
   'gray-4',
-  'gray-5',
-  'darkgray',
-  'darkgray-1'
+  'gray',
+  'darkgray-1',
+  'darkgray'
 }
-local OLD_SPRITE_FILLS <const> = {
-  {
-    'noise-2',
-    'noise-1',
-    'noise-3'
-  },
-  {
-    'lightgray',
-    'lightgray-1',
-    'lightgray-2'
-  },
-  {
-    'vline-1',
-    'vline-2',
-    'vline-3'
-  },
-  {
-    'gray-3',
-    'gray-4',
-    'gray-5'
-  },
-  {
-    'hline-1',
-    'hline-2',
-    'hline-3'
-  },
-  {
-    'darkgray',
-    'darkgray-1',
-    'darkgray-2'
-  },
-  {
-    'dline-4',
-    'dline-1',
-    'dline-7'
-  },
-  {
-    'dot-1',
-    'dot-2',
-    'dot-3'
-  }
+
+local selectedFillIndex = 1
+local selectedFillTimer = 0
+local SELECTED_FILLS_LENGTH <const> = 6
+local SELECTED_FILLS_CYCLE_FRAMES <const> = 9
+local SELECTED_FILLS <const> = {
+  'white',
+  'hline-1',
+  'hline-2',
+  'hline-4',
+  'hline-2',
+  'hline-1'
 }
 
 class('SpriteComponent').extends()
@@ -129,10 +100,10 @@ function SpriteComponent:update()
     -- First stroke the polygon
     if self.ring.selected then
       gfx.setLineWidth(4)
-      gfx.setColor(gfx.kColorBlack)
+      gfx.setColor(gfx.kColorXOR)
     else
       gfx.setLineWidth(2)
-      gfx.setColor(gfx.kColorXOR)
+      gfx.setColor(gfx.kColorBlack)
     end
 
     gfx.setStrokeLocation(gfx.kStrokeCentered)
@@ -140,9 +111,25 @@ function SpriteComponent:update()
 
     -- Then fill the polygon with a pattern
     if self.ring.selected then
-      gfxp.set('white')
+      -- Use a rudimentary timer to cycle through special fills for the selected ring
+      selectedFillTimer = selectedFillTimer + 1
+
+      if selectedFillTimer > SELECTED_FILLS_CYCLE_FRAMES then
+        selectedFillTimer = 0
+
+        -- Increase the index of the selected fill, with wraparound
+        selectedFillIndex = selectedFillIndex + 1
+
+
+        if selectedFillIndex > SELECTED_FILLS_LENGTH then
+          selectedFillIndex = 1
+        end
+      end
+
+
+      gfxp.set(SELECTED_FILLS[selectedFillIndex])
     else
-      gfxp.set(SIMPLE_SPRITE_FILLS[self.ring.layer])
+      gfxp.set(RING_FILLS[self.ring.layer])
     end
 
     gfx.fillPolygon(self.polygon)
