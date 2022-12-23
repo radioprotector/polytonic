@@ -28,8 +28,8 @@ local RING_FILLS <const> = {
   'darkgray'
 }
 
-local selectedFillIndex = 1
-local selectedFillTimer = 0
+local selected_fill_index = 1
+local selected_fill_frame_timer = 0
 local SELECTED_FILLS_LENGTH <const> = 6
 local SELECTED_FILLS_CYCLE_FRAMES <const> = 9
 local SELECTED_FILLS <const> = {
@@ -112,22 +112,20 @@ function SpriteComponent:update()
     -- Then fill the polygon with a pattern
     if self.ring.selected then
       -- Use a rudimentary timer to cycle through special fills for the selected ring
-      selectedFillTimer = selectedFillTimer + 1
+      selected_fill_frame_timer = selected_fill_frame_timer + 1
 
-      if selectedFillTimer > SELECTED_FILLS_CYCLE_FRAMES then
-        selectedFillTimer = 0
+      if selected_fill_frame_timer > SELECTED_FILLS_CYCLE_FRAMES then
+        selected_fill_frame_timer = 0
 
         -- Increase the index of the selected fill, with wraparound
-        selectedFillIndex = selectedFillIndex + 1
+        selected_fill_index = selected_fill_index + 1
 
-
-        if selectedFillIndex > SELECTED_FILLS_LENGTH then
-          selectedFillIndex = 1
+        if selected_fill_index > SELECTED_FILLS_LENGTH then
+          selected_fill_index = 1
         end
       end
 
-
-      gfxp.set(SELECTED_FILLS[selectedFillIndex])
+      gfxp.set(SELECTED_FILLS[selected_fill_index])
     else
       gfxp.set(RING_FILLS[self.ring.layer])
     end
