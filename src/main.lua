@@ -24,6 +24,8 @@ local up_key_timer = nil
 local down_key_timer = nil
 local left_key_timer = nil
 local right_key_timer = nil
+local a_key_timer = nil
+local b_key_timer = nil
 
 local function loadGame()
   math.randomseed(playdate.getSecondsSinceEpoch()) -- seed for math.random
@@ -45,6 +47,14 @@ end
 local function pushSelectedRing(change_deg)
   if change_deg ~= 0 and RINGS[selected_ring] then
     RINGS[selected_ring]:addVelocity(change_deg)
+  end
+end
+
+local function pushAllRings(change_deg)
+  if change_deg ~= 0 then
+    for _, value in pairs(RINGS) do
+      value:addVelocity(change_deg)
+    end
   end
 end
 
@@ -113,7 +123,8 @@ end
 
 function playdate.leftButtonDown()
   local function leftButtonTimerCallback()
-    pushSelectedRing(C.VELOCITY_PUSH_DEG)
+    -- Because radians go counter-clockwise, use a positive value to go "backward"
+    pushSelectedRing(C.VELOCITY_PUSH_SINGLE_DEG)
   end
 
   left_key_timer = timer.keyRepeatTimer(leftButtonTimerCallback)
@@ -125,7 +136,8 @@ end
 
 function playdate.rightButtonDown()
   local function rightButtonTimerCallback()
-    pushSelectedRing(-C.VELOCITY_PUSH_DEG)
+    -- Because radians go counter-clockwise, use a negative value to go "forward"
+    pushSelectedRing(-C.VELOCITY_PUSH_SINGLE_DEG)
   end
 
   right_key_timer = timer.keyRepeatTimer(rightButtonTimerCallback)
@@ -133,6 +145,32 @@ end
 
 function playdate.rightButtonUp()
   right_key_timer:remove()
+end
+
+function playdate.BButtonDown()
+  local function BButtonTimerCallback()
+    -- Because radians go counter-clockwise, use a positive value to go "backward"
+    pushAllRings(C.VELOCITY_PUSH_GLOBAL_DEG)
+  end
+
+  b_key_timer = timer.keyRepeatTimer(BButtonTimerCallback)
+end
+
+function playdate.BButtonUp()
+  b_key_timer:remove()
+end
+
+function playdate.AButtonDown()
+  local function AButtonTimerCallback()
+    -- Because radians go counter-clockwise, use a negative value to go "forward"
+    pushAllRings(-C.VELOCITY_PUSH_GLOBAL_DEG)
+  end
+
+  a_key_timer = timer.keyRepeatTimer(AButtonTimerCallback)
+end
+
+function playdate.AButtonUp()
+  a_key_timer:remove()
 end
 
 function playdate.gameWillPause()
