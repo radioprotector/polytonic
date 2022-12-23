@@ -3,13 +3,16 @@ import 'CoreLibs/timer'
 
 local FULL_RADIANS <const> = 2 * math.pi
 local VELOCITY_MAX <const> = 4 * math.pi
-local VELOCITY_MIN <const> = 0.05 * math.pi
+local VELOCITY_MIN <const> = 0.01 * math.pi
+local DECAY_SECONDS <const> = 30
 
 class('Ring').extends()
 
 function Ring:init(layer)
   Ring.super.init(self)
   self.layer = layer
+  -- Ensure outermost layers have more "inertia"
+  self.inertia = 1.618 ^ (layer / 1.5)
   self.angle_rad = 0
   self.angle_velocity = 0
   self.selected = false
@@ -23,7 +26,7 @@ end
 
 function Ring:addVelocity(change_deg)
   -- Convert change radians to change degrees and make it more difficult as the layer moves outward
-  local change_rad = (change_deg / FULL_RADIANS) * (1 + (self.layer - 1))
+  local change_rad = (change_deg / FULL_RADIANS) / self.inertia
 
   self.angle_velocity = self.angle_velocity + change_rad
 
@@ -51,7 +54,7 @@ function Ring:update()
   end
 
   -- Dampen the velocity towards zero
-  self.angle_velocity = self.angle_velocity - ((self.angle_velocity * 0.999995) / (refreshRate * 30))
+  self.angle_velocity = self.angle_velocity - (self.angle_velocity / (self.inertia * refreshRate * DECAY_SECONDS))
 
   if math.abs(self.angle_velocity) < VELOCITY_MIN then
     self.angle_velocity = 0
