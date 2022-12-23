@@ -20,6 +20,8 @@ local selected_ring = 1
 local allow_ring_snapback = false
 local up_key_timer = nil
 local down_key_timer = nil
+local left_key_timer = nil
+local right_key_timer = nil
 
 local function loadGame()
   math.randomseed(playdate.getSecondsSinceEpoch()) -- seed for math.random
@@ -35,6 +37,12 @@ local function loadGame()
 
   -- Initialize the UI component
   UI_COMPONENT = UIComponent(RINGS)
+end
+
+local function pushSelectedRing(change_deg)
+  if change_deg ~= 0 and RINGS[selected_ring] then
+    RINGS[selected_ring]:addVelocity(change_deg)
+  end
 end
 
 local function changeSelectedRing(new_ring)
@@ -100,6 +108,30 @@ function playdate.downButtonUp()
   allow_ring_snapback = true
 end
 
+function playdate.leftButtonDown()
+  local function leftButtonTimerCallback()
+    pushSelectedRing(C.VELOCITY_PUSH_DEG)
+  end
+
+  left_key_timer = timer.keyRepeatTimer(leftButtonTimerCallback)
+end
+
+function playdate.leftButtonUp()
+  left_key_timer:remove()
+end
+
+function playdate.rightButtonDown()
+  local function rightButtonTimerCallback()
+    pushSelectedRing(-C.VELOCITY_PUSH_DEG)
+  end
+
+  right_key_timer = timer.keyRepeatTimer(rightButtonTimerCallback)
+end
+
+function playdate.rightButtonUp()
+  right_key_timer:remove()
+end
+
 function playdate.gameWillPause()
   -- Generate a screenshot and and offset it by 1/4, which means we should show the center of the screen
   playdate.setMenuImage(gfx.getDisplayImage(), C.CENTER_X / 2)
@@ -107,11 +139,11 @@ end
 
 local function updateGame()
   -- See if the crank will accelerate or decelerate
-  local change, acceleratedChange = playdate.getCrankChange()
+  local change = playdate.getCrankChange()
 
   if change ~= 0 and RINGS[selected_ring] then
     -- Invert the change to turn counter-clockwise radians to clockwise motion
-    RINGS[selected_ring]:addVelocity(-acceleratedChange)
+    pushSelectedRing(-change)
   end
 
   -- Update each ring
