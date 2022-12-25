@@ -29,9 +29,9 @@ local RING_NOTES <const> = {
 }
 
 local CHANNEL_VOLUME <const> = 0.01
-local INSTRUMENT_VOLUME_MAX <const> = 0.5
+local INSTRUMENT_VOLUME_MAX <const> = 0.125
 local LFO_RATE_MIN <const> = 0.025
-local LFO_RATE_MAX <const> = 4
+local LFO_RATE_MAX <const> = 5
 local LFO_DEPTH_MIN <const> = 0.5
 local LFO_DEPTH_MAX <const> = 1.0
 local LFO_DEPTH_RANGE <const> = LFO_DEPTH_MAX - LFO_DEPTH_MIN
@@ -49,14 +49,14 @@ function SoundComponent:init(ring)
     return
   end
 
-  -- Create a synth and instrument that wraps it
-  -- (In the future, we might want to add chorded support, hence the level of instrument indirection)
+  -- Create a synth.
+  -- Previously we looked at wrapping this in an instrument for polyphony,
+  -- but I think that's too much of a performance hit at the moment.
   self.base_synth = snd.synth.new(self.waveform)
-  self.instrument = snd.instrument.new(self.base_synth)
-  self.instrument:playNote(self.base_note)
-  self.instrument:setVolume(0.0)
+  self.base_synth:playNote(self.base_note)
+  self.base_synth:setVolume(0.0)
 
-  -- Create an LFO for the instrument frequency
+  -- Create an LFO for the synth amplitude
   self.lfo = snd.lfo.new(snd.kLFOSine)
   self.lfo:setCenter(LFO_DEPTH_MIN + (LFO_DEPTH_RANGE / 2))
   self.lfo:setRate(LFO_RATE_MIN)
@@ -65,21 +65,21 @@ function SoundComponent:init(ring)
   self.lfo_active = false
   self.base_synth:setAmplitudeMod(self.lfo)
 
-  -- Create a channel just for this instrument
+  -- Create a channel just for this synth
   self.channel = snd.channel.new()
   self.channel:setVolume(CHANNEL_VOLUME)
-  self.channel:addSource(self.instrument)
+  self.channel:addSource(self.base_synth)
 end
 
 function SoundComponent:update()
-  if not self.instrument or not self.base_synth then
+  if not self.base_synth then
     return
   end
 
   -- Change the volume of the instrument, up to a set threshold, based on the velocity
   local abs_velocity = math.abs(self.ring.angle_velocity)
   local volume_amplitude = math.clamp(abs_velocity / C.VELOCITY_VOLUME_MAX, 0.0, INSTRUMENT_VOLUME_MAX)
-  self.instrument:setVolume(volume_amplitude)
+  self.base_synth:setVolume(volume_amplitude)
 
   -- Change the intensity of the LFO based on whether we're at the sufficient threshold
   if abs_velocity > C.VELOCITY_LFO_MIN then
@@ -93,7 +93,6 @@ function SoundComponent:update()
     end
   elseif self.lfo_active then
     self.lfo:setDepth(0)
-    -- This doesn't work - ideally we'd be able to zero out the LFO more efficiently
-    -- self.lfo:setScale(0)
+    self.lfo_active = false
   end
 end
