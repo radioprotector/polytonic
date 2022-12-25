@@ -6,10 +6,10 @@ local snd <const> = playdate.sound
 
 local RING_WAVEFORMS <const> = {
   snd.kWavePOVosim,
-  snd.kWaveTriangle,
+  snd.kWaveSquare,
   snd.kWaveSine,
-  snd.kWavePODigital,
-  snd.kWavePOPhase,
+  snd.kWaveTriangle,
+  snd.kWaveSawtooth,
   snd.kWaveSine,
   snd.kWaveSquare,
   snd.kWaveSawtooth
