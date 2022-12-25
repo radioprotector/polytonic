@@ -48,12 +48,6 @@ function UIComponent:init(rings_table)
 
     demo_hex_large:setPointAt(i, (x * DEMO_HEX_LARGE_RADIUS), (y * DEMO_HEX_LARGE_RADIUS))
     demo_hex_small:setPointAt(i, (x * DEMO_HEX_SMALL_RADIUS), (y * DEMO_HEX_SMALL_RADIUS))
-
-    -- Ensure the last vertex closes the polygon
-    if i == 1 then
-      demo_hex_large:setPointAt(C.POLYGON_VERTICES + 1, (x * DEMO_HEX_LARGE_RADIUS), (y * DEMO_HEX_LARGE_RADIUS))
-      demo_hex_small:setPointAt(C.POLYGON_VERTICES + 1, (x * DEMO_HEX_SMALL_RADIUS), (y * DEMO_HEX_SMALL_RADIUS))
-    end
   end
 
   local center_x_large, center_y_large = DEMO_HEX_LARGE_RADIUS, DEMO_HEX_LARGE_RADIUS

@@ -51,8 +51,7 @@ function SpriteComponent:init(ring)
   end
 
   -- Create a polygon and an image to draw it to.
-  -- Add an extra vertex to close the polygon.
-  self.polygon = geo.polygon.new(C.POLYGON_VERTICES + 1)
+  self.polygon = geo.polygon.new(C.POLYGON_VERTICES)
   self.image = gfx.image.new(self.radius * 2, self.radius * 2)
 
   -- Initialize a sprite to use this image.
@@ -76,15 +75,10 @@ function SpriteComponent:update()
     -- Ensure the y-coordinate is flipped so the vertices are ordered counter-clockwise around the unit circle.
     -- To center the vertices within the bounding box, ensure that each point is translated by the radius.
     local vertex_angle_rad = base_angle_rad + C.POLYGON_VERTEX_RADIANS[i]
-    local x = (self.radius * math.cos(vertex_angle_rad)) + self.radius
-    local y = (-self.radius * math.sin(vertex_angle_rad)) + self.radius
+    local x = math.floor((self.radius * math.cos(vertex_angle_rad)) + self.radius)
+    local y = math.floor((-self.radius * math.sin(vertex_angle_rad)) + self.radius)
 
     self.polygon:setPointAt(i, x, y)
-
-    -- Ensure that the start and end points coincide
-    if i == 1 then
-      self.polygon:setPointAt(C.POLYGON_VERTICES + 1, x, y)
-    end
   end
 
   -- Ensure the polygon is closed
@@ -103,7 +97,7 @@ function SpriteComponent:update()
       gfx.setColor(gfx.kColorBlack)
     end
 
-    gfx.setStrokeLocation(gfx.kStrokeCentered)
+    gfx.setStrokeLocation(gfx.kStrokeInside)
     gfx.drawPolygon(self.polygon)
 
     -- Then fill the polygon with a pattern.
