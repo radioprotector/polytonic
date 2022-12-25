@@ -109,4 +109,7 @@ function UIComponent:draw()
       playdate.ui.crankIndicator:update()
     end
   end
+
+  -- Show debug information in the upper-right
+  playdate.drawFPS(C.SCREEN_WIDTH - 20, 0)
 end

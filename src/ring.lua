@@ -45,7 +45,7 @@ function Ring:addVelocity(change_deg)
   self.angle_velocity = self.angle_velocity + change_rad
 
   -- Clamp the velocity
-  self.angle_velocity = math.min(C.VELOCITY_MAX, math.max(-C.VELOCITY_MAX, self.angle_velocity))
+  self.angle_velocity = math.clamp(self.angle_velocity, -C.VELOCITY_MAX, C.VELOCITY_MAX)
 end
 
 function Ring:update()

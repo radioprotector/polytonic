@@ -6,3 +6,14 @@ function require(name)
 end
 
 packages.constants = import 'constants.lua'
+
+function math.clamp(val, low, high)
+  return math.min(math.max(val, low), high)
+end
+
+function math.mapLinear(fromVal, fromLow, fromHigh, toLow, toHigh)
+  local scaling_factor <const> = (toHigh - toLow) / (fromHigh - fromLow)
+  local ranged_value <const> = math.clamp(fromVal, fromLow, fromHigh) - fromLow
+
+  return toLow + (ranged_value * scaling_factor)
+end
