@@ -97,7 +97,7 @@ function SpriteComponent:update()
       gfx.setColor(gfx.kColorBlack)
     end
 
-    gfx.setStrokeLocation(gfx.kStrokeInside)
+    gfx.setStrokeLocation(gfx.kStrokeCentered)
     gfx.drawPolygon(self.polygon)
 
     -- Then fill the polygon with a pattern.
