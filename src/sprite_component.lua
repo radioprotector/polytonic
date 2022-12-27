@@ -50,6 +50,11 @@ function SpriteComponent:init(ring)
     return
   end
 
+  -- Track the minimum visible change, in radians (divide the perimeter, 6*radius, by 360 to get an approximate pixels/degree measure)
+  self.visible_change_radians = math.rad(self.radius / 60)
+  self.rendered_radians = -1
+  self.selected_prev = false
+
   -- Create a polygon and an image to draw it to.
   self.polygon = geo.polygon.new(C.POLYGON_VERTICES)
   self.image = gfx.image.new(self.radius * 2, self.radius * 2)
@@ -69,27 +74,41 @@ function SpriteComponent:update()
   end
 
   local base_angle_rad <const> = self.ring.angle_rad
+  local ring_selected <const> = self.ring.selected
+  local polygon_updated = false
 
-  for i = 1, C.POLYGON_VERTICES do
+  -- See if the polygon needs to be recalculated
+  if math.abs(base_angle_rad - self.rendered_radians) >= self.visible_change_radians then
     -- Map each vertex to its coordinates on the unit circle.
-    -- Ensure the y-coordinate is flipped so the vertices are ordered counter-clockwise around the unit circle.
-    -- To center the vertices within the bounding box, ensure that each point is translated by the radius.
-    local vertex_angle_rad = base_angle_rad + C.POLYGON_VERTEX_RADIANS[i]
-    local x = math.floor((self.radius * math.cos(vertex_angle_rad)) + self.radius)
-    local y = math.floor((-self.radius * math.sin(vertex_angle_rad)) + self.radius)
+    for i = 1, C.POLYGON_VERTICES do
+      -- Ensure the y-coordinate is flipped so the vertices are ordered counter-clockwise around the unit circle.
+      -- To center the vertices within the bounding box, ensure that each point is translated by the radius.
+      local vertex_angle_rad = base_angle_rad + C.POLYGON_VERTEX_RADIANS[i]
+      local x = math.floor((self.radius * math.cos(vertex_angle_rad)) + self.radius)
+      local y = math.floor((-self.radius * math.sin(vertex_angle_rad)) + self.radius)
 
-    self.polygon:setPointAt(i, x, y)
+      self.polygon:setPointAt(i, x, y)
+    end
+
+    -- Ensure the polygon is closed
+    self.polygon:close()
+    polygon_updated = true
   end
 
-  -- Ensure the polygon is closed
-  self.polygon:close()
+  -- Only continue with rendering if:
+  -- 1) The polygon has been updated
+  -- 2) The ring is currently selected
+  -- 3) The ring *was* previously selected and we haven't re-rendered
+  if not polygon_updated and not ring_selected and not self.selected_prev then
+    return
+  end
 
   -- Now render the image
   gfx.lockFocus(self.image)
     self.image:clear(gfx.kColorClear)
 
     -- First stroke the polygon
-    if self.ring.selected then
+    if ring_selected then
       gfx.setLineWidth(4)
       gfx.setColor(gfx.kColorWhite)
     else
@@ -105,7 +124,7 @@ function SpriteComponent:update()
     -- for the currently-selected ring.
     local poly_fill = RING_FILLS[self.ring.layer]
 
-    if self.ring.selected then
+    if ring_selected then
       -- Use a rudimentary timer to cycle through special fills for the selected ring
       selected_fill_frame_timer = selected_fill_frame_timer + 1
 
@@ -123,16 +142,10 @@ function SpriteComponent:update()
       poly_fill = SELECTED_FILLS[selected_fill_index]
     end
 
-    -- If this is a string value, interpret it as a GFXP string.
-    -- Otherwise, assume it's a table
-    if type(poly_fill) == "string" then
-      gfxp.set(poly_fill)
-    else
-      gfx.setPattern(poly_fill)
-    end
-
+    gfxp.set(poly_fill)
     gfx.fillPolygon(self.polygon)
 
   gfx.unlockFocus(self.image)
   self.sprite:markDirty()
+  self.selected_prev = ring_selected
 end
