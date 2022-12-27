@@ -10,6 +10,7 @@ packages.constants = import 'constants.lua'
 -- Ensure commonly-used math utilities are local for performance
 local math_min <const> = math.min
 local math_max <const> = math.max
+local math_floor <const> = math.floor
 
 function math.clamp(val, low, high)
   return math_min(math_max(val, low), high)
@@ -20,4 +21,9 @@ function math.mapLinear(fromVal, fromLow, fromHigh, toLow, toHigh)
   local ranged_value <const> = math.clamp(fromVal, fromLow, fromHigh) - fromLow
 
   return toLow + (ranged_value * scaling_factor)
+end
+
+function math.roundWithin(val, places)
+  local factor <const> = 10 ^ (places or 0)
+  return math_floor((val * factor) + 0.5) / factor
 end
