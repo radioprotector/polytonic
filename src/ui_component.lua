@@ -6,22 +6,46 @@ import 'CoreLibs/sprites'
 import 'glue'
 local C <const> = require 'constants'
 local gfx <const> = playdate.graphics
-local font <const> = gfx.font
-local geo <const> = playdate.geometry
 
-local demo_hex_large = nil
-local demo_hex_large_text_rect = nil
-local demo_hex_small = nil
-local demo_hex_small_text_rect = nil
-local demo_hex_line = nil
+-- local HELP_TEXT <const> = [[⬆️/⬇️ Move Ring
+-- ⬅️/➡️/🎣 Push Ring
+-- Ⓑ/Ⓐ Push All]]
+local HELP_TEXT = [[■⬆️   ⬇️▪
+←⬅️  □  ➡️→
+⇚Ⓑ ▣ Ⓐ⇛]]
+
+local FONT_PATH <const> = 'assets/Asheville-Sans-14-Bold-Polytone'
+local TEXT_PADDING <const> = 2
 
 class('UIComponent').extends()
 
 function UIComponent:init(rings_table)
   UIComponent.super.init(self)
   self.rings_table = rings_table
-  self.has_ring_velocity = false
   self.show_help = true
+  self.help_font = gfx.font.new(FONT_PATH)
+
+  gfx.setFont(self.help_font)
+  local text_width, text_height = gfx.getTextSize(HELP_TEXT)
+  text_width = math.ceil(text_width + (2 * TEXT_PADDING))
+  text_height = math.ceil(text_height + (3 * TEXT_PADDING))
+
+  self.help_image = gfx.image.new(text_width, text_height)
+  gfx.lockFocus(self.help_image)
+    gfx.setColor(gfx.kColorWhite)
+    gfx.fillRoundRect(0, 0, text_width, text_height, 2)
+
+    gfx.setColor(gfx.kColorBlack)
+    gfx.setFont(self.help_font)
+    gfx.drawTextAligned(HELP_TEXT, text_width / 2, TEXT_PADDING, kTextAlignment.center, TEXT_PADDING)
+  gfx.unlockFocus(self.help_image)
+
+  self.help_sprite = gfx.sprite.new(self.help_image)
+  self.help_sprite:setCenter(0, 0)
+  self.help_sprite:setZIndex(2000)
+  self.help_sprite:moveTo(C.SCREEN_WIDTH - text_width, 0)
+  self.help_sprite:setVisible(self.show_help)
+  self.help_sprite:add()
 
   -- Configure a menu item to toggle help
   local menu <const> = playdate.getSystemMenu()
@@ -29,42 +53,7 @@ function UIComponent:init(rings_table)
     self.show_help = value
   end)
 
-  -- Generate hexes for display
-  local DEMO_HEX_LARGE_RADIUS <const> = 12
-  local DEMO_HEX_SMALL_RADIUS <const> = 6
-  local DEMO_HEX_TEXT_BOX_WIDTH <const> = 20
-  local DEMO_HEX_TEXT_BOX_HEIGHT <const> = 20
-  local DEMO_HEX_TEXT_OFFSET_Y_LARGE <const> = 2
-  local DEMO_HEX_TEXT_OFFSET_Y_SMALL <const> = C.SCREEN_HEIGHT - DEMO_HEX_TEXT_BOX_HEIGHT
-  local DEMO_HEX_TEXT_OFFSET_X <const> = 2 + (DEMO_HEX_LARGE_RADIUS * 2)
-
-  demo_hex_large = geo.polygon.new(C.POLYGON_VERTICES)
-  demo_hex_small = geo.polygon.new(C.POLYGON_VERTICES)
-
-  for i = 1, C.POLYGON_VERTICES do
-    local vertex_angle_rad <const> = C.POLYGON_VERTEX_RADIANS[i]
-    local x <const> = math.cos(vertex_angle_rad)
-    local y <const> = math.sin(vertex_angle_rad)
-
-    demo_hex_large:setPointAt(i, (x * DEMO_HEX_LARGE_RADIUS), (y * DEMO_HEX_LARGE_RADIUS))
-    demo_hex_small:setPointAt(i, (x * DEMO_HEX_SMALL_RADIUS), (y * DEMO_HEX_SMALL_RADIUS))
-  end
-
-  local center_x_large, center_y_large = DEMO_HEX_LARGE_RADIUS, DEMO_HEX_LARGE_RADIUS
-  local center_x_small = DEMO_HEX_SMALL_RADIUS + (DEMO_HEX_LARGE_RADIUS - DEMO_HEX_SMALL_RADIUS)
-  local center_y_small = C.SCREEN_HEIGHT - DEMO_HEX_LARGE_RADIUS
-
-  demo_hex_large:close()
-  demo_hex_large:translate(center_x_large, center_y_large)
-  demo_hex_small:close()
-  demo_hex_small:translate(center_x_small, center_y_small)
-
-  demo_hex_line = geo.lineSegment.new(center_x_large, center_y_large, center_x_small, center_y_small)
-  demo_hex_large_text_rect = geo.rect.new(DEMO_HEX_TEXT_OFFSET_X, DEMO_HEX_TEXT_OFFSET_Y_LARGE, DEMO_HEX_TEXT_BOX_WIDTH, DEMO_HEX_TEXT_BOX_HEIGHT)
-  demo_hex_small_text_rect = geo.rect.new(DEMO_HEX_TEXT_OFFSET_X, DEMO_HEX_TEXT_OFFSET_Y_SMALL, DEMO_HEX_TEXT_BOX_WIDTH, DEMO_HEX_TEXT_BOX_HEIGHT)
-
-  -- Add a crank indicator
-  playdate.ui.crankIndicator:start()
+  -- Disable crank sounds
   playdate.setCrankSoundsDisabled(true)
 end
 
@@ -81,29 +70,9 @@ function UIComponent:update()
 end
 
 function UIComponent:draw()
-  gfx.setColor(gfx.kColorWhite)
-  gfx.setFont(font.kVariantNormal)
-  gfx.setLineWidth(2)
+  -- Cascade help visibility to the sprite
+  self.help_sprite:setVisible(self.show_help)
 
-  -- See if we are configured to show help
-  if self.show_help then
-    -- Draw the line connecting the hexes, and then each hex
-    gfx.drawLine(demo_hex_line)
-
-    gfx.fillPolygon(demo_hex_large)
-    gfx.fillRoundRect(demo_hex_large_text_rect, 2)
-    gfx.drawTextInRect('⬆️', demo_hex_large_text_rect, nil, nil, kTextAlignment.center)
-
-    gfx.fillPolygon(demo_hex_small)
-    gfx.fillRoundRect(demo_hex_small_text_rect, 2)
-    gfx.drawTextInRect('⬇️', demo_hex_small_text_rect, nil, nil, kTextAlignment.center)
-
-    -- This needs to go after all sprites are updated
-    if not self.has_ring_velocity and playdate.isCrankDocked() then
-      playdate.ui.crankIndicator:update()
-    end
-  end
-
-  -- Show debug information in the upper-right
-  playdate.drawFPS(C.SCREEN_WIDTH - 20, 0)
+  -- Show debug information in the lower-right
+  playdate.drawFPS(C.SCREEN_WIDTH - 20, C.SCREEN_HEIGHT - 20)
 end
