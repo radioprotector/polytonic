@@ -42,6 +42,10 @@ local function loadGame()
 
   -- Initialize the UI component
   UI_COMPONENT = UIComponent(RINGS)
+
+  -- Start with a black background
+  gfx.setBackgroundColor(gfx.kColorBlack)
+  gfx.clear()
 end
 
 local function pushSelectedRing(change_deg)
@@ -208,9 +212,8 @@ end
 
 local function drawGame()
   gfx.setBackgroundColor(gfx.kColorBlack)
-  gfx.clear()
 
-  -- Update all other sprites
+  -- Ensure all sprites are updated
   gfx.sprite.update()
 
   -- Render the UI component
