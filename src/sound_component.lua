@@ -8,7 +8,6 @@ local snd <const> = playdate.sound
 local math_abs <const> = math.abs
 local math_clamp <const> = math.clamp
 local math_mapLinear <const> = math.mapLinear
-local math_roundWithin <const> = math.roundWithin
 
 -- Similarly localize key constants
 local VELOCITY_VOLUME_MAX <const> = C.VELOCITY_VOLUME_MAX
@@ -66,7 +65,6 @@ function SoundComponent:init(ring)
   self.base_synth = snd.synth.new(self.waveform)
   self.base_synth:playNote(self.base_note)
   self.base_synth:setVolume(0.0)
-  self.volume_prev = 0.0
 
   -- Create an LFO for the synth amplitude
   self.lfo = snd.lfo.new(snd.kLFOSine)
@@ -75,7 +73,6 @@ function SoundComponent:init(ring)
   self.lfo:setPhase((self.ring.layer - 1) / C.RING_COUNT)
   self.lfo:setDepth(0)
   self.lfo_active = false
-  self.lfo_prev_rate = LFO_RATE_MIN
   self.base_synth:setAmplitudeMod(self.lfo)
 
   -- Create a channel just for this synth
@@ -91,21 +88,13 @@ function SoundComponent:update()
 
   -- Change the volume of the instrument, up to a set threshold, based on the velocity
   local abs_velocity = math_abs(self.ring.angle_velocity)
-  local volume_amplitude = math_roundWithin(math_clamp(abs_velocity / VELOCITY_VOLUME_MAX, 0.0, INSTRUMENT_VOLUME_MAX), 2)
-
-  if volume_amplitude ~= volume_prev then
-    self.base_synth:setVolume(volume_amplitude)
-    self.volume_prev = volume_amplitude
-  end
+  local volume_amplitude = math_clamp(abs_velocity / VELOCITY_VOLUME_MAX, 0.0, INSTRUMENT_VOLUME_MAX)
+  self.base_synth:setVolume(volume_amplitude)
 
   -- Change the intensity of the LFO based on whether we're at the sufficient threshold
   if abs_velocity > VELOCITY_LFO_MIN then
-    local lfo_rate = math_roundWithin(math_mapLinear(abs_velocity, VELOCITY_LFO_MIN, VELOCITY_LFO_MAX, LFO_RATE_MIN, LFO_RATE_MAX), 1)
-
-    if lfo_rate ~= self.lfo_prev_rate then
-      self.lfo:setRate(lfo_rate)
-      self.lfo_prev_rate = lfo_rate
-    end
+    local lfo_rate = math_mapLinear(abs_velocity, VELOCITY_LFO_MIN, VELOCITY_LFO_MAX, LFO_RATE_MIN, LFO_RATE_MAX)
+    self.lfo:setRate(lfo_rate)
 
     -- Only mess with the depth if the LFO is not activated
     if not self.lfo_active then
