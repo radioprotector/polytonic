@@ -4,6 +4,16 @@ import 'glue'
 local C <const> = require 'constants'
 local snd <const> = playdate.sound
 
+-- Ensure commonly-used math utilities are local for performance
+local math_abs <const> = math.abs
+local math_clamp <const> = math.clamp
+local math_mapLinear <const> = math.mapLinear
+
+-- Similarly localize key constants
+local VELOCITY_VOLUME_MAX <const> = C.VELOCITY_VOLUME_MAX
+local VELOCITY_LFO_MIN <const> = C.VELOCITY_LFO_MIN
+local VELOCITY_LFO_MAX <const> = C.VELOCITY_LFO_MAX
+
 local RING_WAVEFORMS <const> = {
   snd.kWavePOVosim,
   snd.kWaveSquare,
@@ -77,13 +87,13 @@ function SoundComponent:update()
   end
 
   -- Change the volume of the instrument, up to a set threshold, based on the velocity
-  local abs_velocity = math.abs(self.ring.angle_velocity)
-  local volume_amplitude = math.clamp(abs_velocity / C.VELOCITY_VOLUME_MAX, 0.0, INSTRUMENT_VOLUME_MAX)
+  local abs_velocity = math_abs(self.ring.angle_velocity)
+  local volume_amplitude = math_clamp(abs_velocity / VELOCITY_VOLUME_MAX, 0.0, INSTRUMENT_VOLUME_MAX)
   self.base_synth:setVolume(volume_amplitude)
 
   -- Change the intensity of the LFO based on whether we're at the sufficient threshold
-  if abs_velocity > C.VELOCITY_LFO_MIN then
-    local lfo_rate = math.mapLinear(abs_velocity, C.VELOCITY_LFO_MIN, C.VELOCITY_LFO_MAX, LFO_RATE_MIN, LFO_RATE_MAX)
+  if abs_velocity > VELOCITY_LFO_MIN then
+    local lfo_rate = math_mapLinear(abs_velocity, VELOCITY_LFO_MIN, VELOCITY_LFO_MAX, LFO_RATE_MIN, LFO_RATE_MAX)
     self.lfo:setRate(lfo_rate)
 
     -- Only mess with the depth if the LFO is not activated

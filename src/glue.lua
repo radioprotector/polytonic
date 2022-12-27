@@ -7,8 +7,12 @@ end
 
 packages.constants = import 'constants.lua'
 
+-- Ensure commonly-used math utilities are local for performance
+local math_min <const> = math.min
+local math_max <const> = math.max
+
 function math.clamp(val, low, high)
-  return math.min(math.max(val, low), high)
+  return math_min(math_max(val, low), high)
 end
 
 function math.mapLinear(fromVal, fromLow, fromHigh, toLow, toHigh)

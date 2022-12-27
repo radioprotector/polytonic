@@ -4,6 +4,18 @@ import 'CoreLibs/timer'
 import 'glue'
 local C <const> = require 'constants'
 
+-- Ensure commonly-used math utilities are local for performance
+local math_rad <const> = math.rad
+local math_clamp <const> = math.clamp
+local math_abs <const> = math.abs
+
+-- Similarly localize key constants
+local TWO_PI <const> = C.TWO_PI
+local VELOCITY_MIN <const> = C.VELOCITY_MIN
+local VELOCITY_MAX <const> = C.VELOCITY_MAX
+local REFRESH_RATE <const> = 30
+local VELOCITY_DECAY_SECONDS <const> = C.VELOCITY_DECAY_SECONDS
+
 local RING_INERTIA <const> = {
   C.PHI,
   C.PHI * 1.5,
@@ -35,17 +47,20 @@ function Ring:init(layer)
     return
   end
 
+  -- Calculate per-frame decay
+  self.decay_denominator = self.inertia * REFRESH_RATE * VELOCITY_DECAY_SECONDS
+
   -- printTable(self)
 end
 
 function Ring:addVelocity(change_deg)
   -- Convert change radians to change degrees and make it more difficult as the layer moves outward
-  local change_rad = math.rad(change_deg) / self.inertia
+  local change_rad = math_rad(change_deg) / self.inertia
 
   self.angle_velocity = self.angle_velocity + change_rad
 
   -- Clamp the velocity
-  self.angle_velocity = math.clamp(self.angle_velocity, -C.VELOCITY_MAX, C.VELOCITY_MAX)
+  self.angle_velocity = math_clamp(self.angle_velocity, -VELOCITY_MAX, VELOCITY_MAX)
 end
 
 function Ring:update()
@@ -54,19 +69,16 @@ function Ring:update()
     return
   end
 
-  local refreshRate <const> = playdate.display.getRefreshRate()
-
   -- Update the angular position based on the velocity, normalized by the number of frames
-  self.angle_rad = self.angle_rad + (self.angle_velocity / refreshRate)
-
-  if self.angle_rad > C.TWO_PI then
-    self.angle_rad = self.angle_rad - C.TWO_PI
-  end
+  self.angle_rad = self.angle_rad + (self.angle_velocity / REFRESH_RATE)
 
   -- Dampen the velocity towards zero
-  self.angle_velocity = self.angle_velocity - (self.angle_velocity / (self.inertia * refreshRate * C.VELOCITY_DECAY_SECONDS))
+  self.angle_velocity = self.angle_velocity - (self.angle_velocity / self.decay_denominator)
 
-  if math.abs(self.angle_velocity) < C.VELOCITY_MIN then
+  -- Wrap high values and round-down low values
+  if math_abs(self.angle_velocity) < VELOCITY_MIN then
     self.angle_velocity = 0
+  elseif self.angle_rad > TWO_PI then
+    self.angle_rad = self.angle_rad - TWO_PI
   end
 end

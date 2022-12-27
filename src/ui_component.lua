@@ -42,7 +42,7 @@ function UIComponent:init(rings_table)
 
   self.help_sprite = gfx.sprite.new(self.help_image)
   self.help_sprite:setCenter(0, 0)
-  self.help_sprite:setZIndex(2000)
+  self.help_sprite:setZIndex(C.UI_BASE_ZINDEX)
   self.help_sprite:moveTo(C.SCREEN_WIDTH - text_width, 0)
   self.help_sprite:setVisible(self.show_help)
   self.help_sprite:add()

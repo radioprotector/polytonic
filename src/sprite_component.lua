@@ -9,7 +9,16 @@ local gfx <const> = playdate.graphics
 local geo <const> = playdate.geometry
 local gfxp <const> = GFXP
 
-local BASE_SPRITE_ZINDEX <const> = 1000
+-- Ensure commonly-used math utilities are local for performance
+local math_sin <const> = math.sin
+local math_cos <const> = math.cos
+local math_floor <const> = math.floor
+
+-- Similarly localize key constants
+local POLYGON_VERTEX_RADIANS <const> = C.POLYGON_VERTEX_RADIANS
+local POLYGON_VERTICES <const> = C.POLYGON_VERTICES
+
+local BASE_SPRITE_ZINDEX <const> = C.RING_BASE_ZINDEX
 local RING_FILLS <const> = {
   'dot-2',
   {0xFF, 0xDD, 0xFF, 0xFF, 0xFF, 0xDD, 0xFF, 0xFF},
@@ -51,7 +60,7 @@ function SpriteComponent:init(ring)
   end
 
   -- Create a polygon and an image to draw it to.
-  self.polygon = geo.polygon.new(C.POLYGON_VERTICES)
+  self.polygon = geo.polygon.new(POLYGON_VERTICES)
   self.image = gfx.image.new(self.radius * 2, self.radius * 2)
 
   -- Initialize a sprite to use this image.
@@ -70,13 +79,13 @@ function SpriteComponent:update()
 
   local base_angle_rad <const> = self.ring.angle_rad
 
-  for i = 1, C.POLYGON_VERTICES do
+  for i = 1, POLYGON_VERTICES do
     -- Map each vertex to its coordinates on the unit circle.
     -- Ensure the y-coordinate is flipped so the vertices are ordered counter-clockwise around the unit circle.
     -- To center the vertices within the bounding box, ensure that each point is translated by the radius.
-    local vertex_angle_rad = base_angle_rad + C.POLYGON_VERTEX_RADIANS[i]
-    local x = math.floor((self.radius * math.cos(vertex_angle_rad)) + self.radius)
-    local y = math.floor((-self.radius * math.sin(vertex_angle_rad)) + self.radius)
+    local vertex_angle_rad = base_angle_rad + POLYGON_VERTEX_RADIANS[i]
+    local x = math_floor((self.radius * math_cos(vertex_angle_rad)) + self.radius)
+    local y = math_floor((-self.radius * math_sin(vertex_angle_rad)) + self.radius)
 
     self.polygon:setPointAt(i, x, y)
   end
