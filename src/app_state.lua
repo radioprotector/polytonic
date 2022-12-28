@@ -12,7 +12,7 @@ function loadAppState()
 
   if file_state then
     POLYTONE_STATE.show_help = file_state.show_help
-    POLYTONE_STATE.dissonance_fill_enabled = file_state.show_help
+    POLYTONE_STATE.dissonance_fill_enabled = file_state.dissonance_fill_enabled
   end
 end
 
