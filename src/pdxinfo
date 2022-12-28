@@ -1,6 +1,6 @@
 name=polytone
 author=Cate Stock
-description=CHANGEME
+description=An audiovisual toy inspired by Electroplankton's Lumiloop.
 bundleID=com.radioprotector.polytone
 version=0.0.1
 buildNumber=1
