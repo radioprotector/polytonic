@@ -5,14 +5,16 @@ local C <const> = require 'constants'
 local snd <const> = playdate.sound
 
 -- Ensure commonly-used math utilities are local for performance
+local math_modf <const> = math.modf
 local math_abs <const> = math.abs
 local math_clamp <const> = math.clamp
 local math_mapLinear <const> = math.mapLinear
 
 -- Similarly localize key constants
+local VELOCITY_MAX <const> = C.VELOCITY_MAX
 local VELOCITY_VOLUME_MAX <const> = C.VELOCITY_VOLUME_MAX
-local VELOCITY_LFO_MIN <const> = C.VELOCITY_LFO_MIN
-local VELOCITY_LFO_MAX <const> = C.VELOCITY_LFO_MAX
+local VELOCITY_AMP_LFO_MIN <const> = C.VELOCITY_AMP_LFO_MIN
+local VELOCITY_AMP_LFO_MAX <const> = C.VELOCITY_AMP_LFO_MAX
 
 local RING_WAVEFORMS <const> = {
   snd.kWavePOVosim,
@@ -40,11 +42,14 @@ local RING_NOTES <const> = {
 
 local CHANNEL_VOLUME <const> = 0.01
 local INSTRUMENT_VOLUME_MAX <const> = 0.125
-local LFO_RATE_MIN <const> = 0.025
-local LFO_RATE_MAX <const> = 5
-local LFO_DEPTH_MIN <const> = 0.5
-local LFO_DEPTH_MAX <const> = 1.0
-local LFO_DEPTH_RANGE <const> = LFO_DEPTH_MAX - LFO_DEPTH_MIN
+local AMP_LFO_RATE_MIN <const> = 0.025
+local AMP_LFO_RATE_MAX <const> = 5
+local AMP_LFO_CENTER <const> = 0.75 -- Center on 75% amplitude
+local AMP_LFO_DEPTH <const> = 0.25 -- Range amplitude from 50-100%
+local FREQ_LFO_RATE_MIN <const> = AMP_LFO_RATE_MIN
+local FREQ_LFO_RATE_MAX <const> = AMP_LFO_RATE_MAX / 2
+local FREQ_LFO_CENTER <const> = 0 -- By default, keep the frequency where it is
+local FREQ_LFO_DEPTH <const> = 0.005
 
 class('RingSoundComponent').extends()
 
@@ -66,14 +71,27 @@ function RingSoundComponent:init(ring)
   self.base_synth:playNote(self.base_note)
   self.base_synth:setVolume(0.0)
 
+  -- Create a phase to share across the LFOs
+  local amp_lfo_phase <const> = (self.ring.layer - 1) / C.RING_COUNT
+  local _, freq_lfo_phase <const> = math_modf(amp_lfo_phase + 0.5)
+
   -- Create an LFO for the synth amplitude
-  self.lfo = snd.lfo.new(snd.kLFOSine)
-  self.lfo:setCenter(LFO_DEPTH_MIN + (LFO_DEPTH_RANGE / 2))
-  self.lfo:setRate(LFO_RATE_MIN)
-  self.lfo:setPhase((self.ring.layer - 1) / C.RING_COUNT)
-  self.lfo:setDepth(0)
-  self.lfo_active = false
-  self.base_synth:setAmplitudeMod(self.lfo)
+  self.amp_lfo = snd.lfo.new(snd.kLFOSine)
+  self.amp_lfo:setCenter(AMP_LFO_CENTER)
+  self.amp_lfo:setRate(AMP_LFO_RATE_MIN)
+  self.amp_lfo:setPhase(amp_lfo_phase)
+  self.amp_lfo:setDepth(0)
+  self.amp_lfo_active = false
+  self.base_synth:setAmplitudeMod(self.amp_lfo)
+
+  -- Create an LFO for the synth frequency
+  self.freq_lfo = snd.lfo.new(snd.kLFOTriangle)
+  self.freq_lfo:setCenter(FREQ_LFO_CENTER)
+  self.freq_lfo:setRate(FREQ_LFO_RATE_MIN)
+  self.freq_lfo:setPhase(freq_lfo_phase)
+  self.freq_lfo:setDepth(0)
+  self.freq_lfo_active = false
+  self.base_synth:setFrequencyMod(self.freq_lfo)
 
   -- Create a channel just for this synth
   self.channel = snd.channel.new()
@@ -87,22 +105,38 @@ function RingSoundComponent:update()
   end
 
   -- Change the volume of the instrument, up to a set threshold, based on the velocity
-  local abs_velocity = math_abs(self.ring.angle_velocity)
+  local velocity <const> = self.ring.angle_velocity
+  local abs_velocity <const> = math_abs(velocity)
   local volume_amplitude = math_clamp(abs_velocity / VELOCITY_VOLUME_MAX, 0.0, INSTRUMENT_VOLUME_MAX)
   self.base_synth:setVolume(volume_amplitude)
 
-  -- Change the intensity of the LFO based on whether we're at the sufficient threshold
-  if abs_velocity > VELOCITY_LFO_MIN then
-    local lfo_rate = math_mapLinear(abs_velocity, VELOCITY_LFO_MIN, VELOCITY_LFO_MAX, LFO_RATE_MIN, LFO_RATE_MAX)
-    self.lfo:setRate(lfo_rate)
+  -- Change the intensity of the amplitude LFO if velocity is high enough
+  if abs_velocity > VELOCITY_AMP_LFO_MIN then
+    local amp_lfo_rate = math_mapLinear(abs_velocity, VELOCITY_AMP_LFO_MIN, VELOCITY_AMP_LFO_MAX, AMP_LFO_RATE_MIN, AMP_LFO_RATE_MAX)
+    self.amp_lfo:setRate(amp_lfo_rate)
 
     -- Only mess with the depth if the LFO is not activated
-    if not self.lfo_active then
-      self.lfo:setDepth(LFO_DEPTH_RANGE)
-      self.lfo_active = true
+    if not self.amp_lfo_active then
+      self.amp_lfo:setDepth(AMP_LFO_DEPTH)
+      self.amp_lfo_active = true
     end
-  elseif self.lfo_active then
-    self.lfo:setDepth(0)
-    self.lfo_active = false
+  elseif self.amp_lfo_active then
+    self.amp_lfo:setDepth(0)
+    self.amp_lfo_active = false
+  end
+
+  -- Change the depth of the frequency LFO if in a counter-clockwise (positive radians) velocity
+  if velocity > 0 then
+    local freq_lfo_rate = math_mapLinear(abs_velocity, 0, VELOCITY_MAX, FREQ_LFO_RATE_MIN, FREQ_LFO_RATE_MAX)
+    self.freq_lfo:setRate(freq_lfo_rate)
+
+    -- Only mess with the depth if the LFO is not activated
+    if not self.freq_lfo_active then
+      self.freq_lfo:setDepth(FREQ_LFO_DEPTH)
+      self.freq_lfo_active = true
+    end
+  elseif self.freq_lfo_active then
+    self.freq_lfo:setDepth(0)
+    self.freq_lfo_active = false
   end
 end
