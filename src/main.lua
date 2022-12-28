@@ -77,6 +77,7 @@ local total_dissonance = nil
 local total_dissonance_percentile = nil
 local dissonance_fill = nil
 local dissonance_fill_frames = DISSONANCE_UPDATE_FRAMES
+local dissonance_fill_enabled = true
 
 local function loadGame()
   math.randomseed(playdate.getSecondsSinceEpoch()) -- seed for math.random
@@ -93,6 +94,12 @@ local function loadGame()
 
   -- Initialize the UI component
   UI_COMPONENT = UIComponent(RINGS)
+
+  -- Configure a menu item to toggle help
+  local menu <const> = playdate.getSystemMenu()
+  menu:addCheckmarkMenuItem('Plain BG', not dissonance_fill_enabled, function(value)
+    dissonance_fill_enabled = not value
+  end)
 end
 
 local function pushSelectedRing(change_deg)
@@ -287,7 +294,12 @@ end
 
 local function drawGame()
   -- Start with a background fill
-  gfxp.set(dissonance_fill)
+  if dissonance_fill_enabled then
+    gfxp.set(dissonance_fill)
+  else
+    gfx.setColor(gfx.kColorBlack)
+  end
+
   gfx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
 
   -- Ensure all rings are drawn.
