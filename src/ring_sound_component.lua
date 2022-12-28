@@ -46,10 +46,10 @@ local LFO_DEPTH_MIN <const> = 0.5
 local LFO_DEPTH_MAX <const> = 1.0
 local LFO_DEPTH_RANGE <const> = LFO_DEPTH_MAX - LFO_DEPTH_MIN
 
-class('SoundComponent').extends()
+class('RingSoundComponent').extends()
 
-function SoundComponent:init(ring)
-  SoundComponent.super.init(self)
+function RingSoundComponent:init(ring)
+  RingSoundComponent.super.init(self)
   self.ring = ring
   self.base_note = RING_NOTES[self.ring.layer]
   self.waveform = RING_WAVEFORMS[self.ring.layer]
@@ -81,7 +81,7 @@ function SoundComponent:init(ring)
   self.channel:addSource(self.base_synth)
 end
 
-function SoundComponent:update()
+function RingSoundComponent:update()
   if not self.base_synth then
     return
   end

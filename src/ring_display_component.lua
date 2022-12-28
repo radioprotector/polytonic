@@ -47,10 +47,10 @@ local SELECTED_FILLS <const> = {
   'white'
 }
 
-class('SpriteComponent').extends()
+class('RingDisplayComponent').extends()
 
-function SpriteComponent:init(ring)
-  SpriteComponent.super.init(self)
+function RingDisplayComponent:init(ring)
+  RingDisplayComponent.super.init(self)
   self.ring = ring
   self.radius = C.POLYGON_RADII[ring.layer]
 
@@ -63,7 +63,7 @@ function SpriteComponent:init(ring)
   self.polygon = geo.polygon.new(POLYGON_VERTICES)
 end
 
-function SpriteComponent:update()
+function RingDisplayComponent:update()
   if not self.polygon then
     return
   end
@@ -85,7 +85,7 @@ function SpriteComponent:update()
   self.polygon:close()
 end
 
-function SpriteComponent:draw()
+function RingDisplayComponent:draw()
   -- First stroke the polygon
   if self.ring.selected then
     gfx.setLineWidth(4)

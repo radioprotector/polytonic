@@ -4,8 +4,8 @@ import 'CoreLibs/timer'
 
 import 'glue'
 import 'ring'
-import 'sprite_component'
-import 'sound_component'
+import 'ring_display_component'
+import 'ring_sound_component'
 import 'ui_component'
 
 -- Localize key modules/functions
@@ -39,11 +39,11 @@ local b_key_timer = nil
 local function loadGame()
   math.randomseed(playdate.getSecondsSinceEpoch()) -- seed for math.random
 
-  -- Generate rings and sprite components for each ring
+  -- Generate ring entities and components for each ring
   for i = 1, RING_COUNT do
     RINGS[i] = Ring(i)
-    RING_DISPLAY_COMPONENTS[i] = SpriteComponent(RINGS[i])
-    RING_SOUND_COMPONENTS[i] = SoundComponent(RINGS[i])
+    RING_DISPLAY_COMPONENTS[i] = RingDisplayComponent(RINGS[i])
+    RING_SOUND_COMPONENTS[i] = RingSoundComponent(RINGS[i])
   end
 
   -- Mark the first ring as selected
@@ -201,7 +201,7 @@ local function updateGame()
     value:update()
   end
 
-  -- Update the sprite components associated with the rings
+  -- Update the display components associated with the rings
   for _, value in pairs(RING_DISPLAY_COMPONENTS) do
     value:update()
   end
