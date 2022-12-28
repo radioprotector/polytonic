@@ -4,6 +4,7 @@ import 'CoreLibs/timer'
 import 'lib/gfxp'
 
 import 'glue'
+import 'app_state'
 import 'ring'
 import 'ring_display_component'
 import 'ring_sound_component'
@@ -77,10 +78,12 @@ local total_dissonance = nil
 local total_dissonance_percentile = nil
 local dissonance_fill = nil
 local dissonance_fill_frames = DISSONANCE_UPDATE_FRAMES
-local dissonance_fill_enabled = true
 
 local function loadGame()
-  math.randomseed(playdate.getSecondsSinceEpoch()) -- seed for math.random
+  math.randomseed(playdate.getSecondsSinceEpoch())
+
+  -- Initialize game state
+  loadAppState()
 
   -- Generate ring entities and components for each ring
   for i = 1, RING_COUNT do
@@ -95,11 +98,18 @@ local function loadGame()
   -- Initialize the UI component
   UI_COMPONENT = UIComponent(RINGS)
 
-  -- Configure a menu item to toggle help
+  -- Configure menu items to toggle dissonance fills and help
   local menu <const> = playdate.getSystemMenu()
-  menu:addCheckmarkMenuItem('Plain BG', not dissonance_fill_enabled, function(value)
-    dissonance_fill_enabled = not value
+  menu:addCheckmarkMenuItem('Animate BG', POLYTONE_STATE.dissonance_fill_enabled, function(value)
+    POLYTONE_STATE.dissonance_fill_enabled = value
   end)
+
+  menu:addCheckmarkMenuItem('Show Help', POLYTONE_STATE.show_help, function(value)
+    POLYTONE_STATE.show_help = value
+  end)
+
+  -- Disable crank sounds
+  playdate.setCrankSoundsDisabled(true)
 end
 
 local function pushSelectedRing(change_deg)
@@ -236,6 +246,14 @@ function playdate.gameWillPause()
   playdate.setMenuImage(gfx.getDisplayImage(), CENTER_X / 2)
 end
 
+function playdate.gameWillTerminate()
+  saveAppState()
+end
+
+function playdate.deviceWillSleep()
+  saveAppState()
+end
+
 local function updateGame()
   -- See if the crank will accelerate or decelerate
   local change = playdate.getCrankChange()
@@ -294,7 +312,7 @@ end
 
 local function drawGame()
   -- Start with a background fill
-  if dissonance_fill_enabled then
+  if POLYTONE_STATE.dissonance_fill_enabled then
     gfxp.set(dissonance_fill)
   else
     gfx.setColor(gfx.kColorBlack)
@@ -311,7 +329,10 @@ local function drawGame()
   -- Render the UI component
   UI_COMPONENT:draw()
 
-  -- -- DEBUG TEXT
+  -- DEBUG: Show FPS in the lower-right
+  playdate.drawFPS(C.SCREEN_WIDTH - 20, C.SCREEN_HEIGHT - 20)
+
+  -- -- DEBUG: Ring angles and total dissonance
   -- gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
 
   -- for i = RING_COUNT, 1, -1 do

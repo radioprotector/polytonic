@@ -2,12 +2,10 @@ import 'CoreLibs/object'
 import 'CoreLibs/graphics'
 
 import 'glue'
+import 'app_state'
 local C <const> = require 'constants'
 local gfx <const> = playdate.graphics
 
--- local HELP_TEXT <const> = [[⬆️/⬇️ Move Ring
--- ⬅️/➡️/🎣 Push Ring
--- Ⓑ/Ⓐ Push All]]
 local HELP_TEXT = [[■⬆️   ⬇️▪
 ←⬅️ □ ➡️→
 ⇚Ⓑ ▣ Ⓐ⇛]]
@@ -41,15 +39,6 @@ function UIComponent:init(rings_table)
     gfx.setFont(self.help_font)
     gfx.drawTextAligned(HELP_TEXT, text_width / 2, TEXT_PADDING, kTextAlignment.center, TEXT_PADDING)
   gfx.unlockFocus(self.help_image)
-
-  -- Configure a menu item to toggle help
-  local menu <const> = playdate.getSystemMenu()
-  menu:addCheckmarkMenuItem('Show Help', self.show_help, function(value)
-    self.show_help = value
-  end)
-
-  -- Disable crank sounds
-  playdate.setCrankSoundsDisabled(true)
 end
 
 function UIComponent:update()
@@ -66,11 +55,8 @@ end
 
 function UIComponent:draw()
   -- Draw the image if enabled
-  if self.show_help then
+  if POLYTONE_STATE.show_help then
     gfx.setImageDrawMode(gfx.kDrawModeCopy)
     self.help_image:draw(self.start_x, self.start_y)
   end
-
-  -- Show debug information in the lower-right
-  playdate.drawFPS(C.SCREEN_WIDTH - 20, C.SCREEN_HEIGHT - 20)
 end
