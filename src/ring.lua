@@ -38,6 +38,7 @@ function Ring:init(layer)
   self.angle_rad = 0
   self.angle_velocity = 0
   self.selected = false
+
   if self.layer % 2 == 0 then
     self.angle_rad = C.HALF_PI
   end
@@ -75,10 +76,15 @@ function Ring:update()
   -- Dampen the velocity towards zero
   self.angle_velocity = self.angle_velocity - (self.angle_velocity / self.decay_denominator)
 
-  -- Wrap high values and round-down low values
+  -- Stop extremely slow values entirely
   if math_abs(self.angle_velocity) < VELOCITY_MIN then
     self.angle_velocity = 0
-  elseif self.angle_rad > TWO_PI then
-    self.angle_rad = self.angle_rad - TWO_PI
+  end
+
+  -- Try to keep radians values within 0-2pi radians
+  if self.angle_rad > TWO_PI then
+    self.angle_rad -= TWO_PI
+  elseif self.angle_rad < 0 then
+    self.angle_rad += TWO_PI
   end
 end
