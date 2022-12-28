@@ -1,5 +1,11 @@
 --- The core ring entity.
--- @classmod Ring
+--- @class Ring
+--- @field layer integer The layer number of this instance.
+--- @field angle_rad number The angle, in radians, of this instance.
+--- @field angle_velocity number The angular velocity, in radians, of this instance.
+--- @field selected boolean Whether this instance is currently selected.
+--- @field addVelocity fun(self: Ring, change_deg: number) Adds velocity to this ring instance.
+--- @field update fun(self: Ring) Updates this ring instance by applying and damping velocity and normalizing angular position.
 import 'CoreLibs/object'
 import 'CoreLibs/timer'
 
@@ -15,10 +21,11 @@ local math_abs <const> = math.abs
 local TWO_PI <const> = C.TWO_PI
 local VELOCITY_MIN <const> = C.VELOCITY_MIN
 local VELOCITY_MAX <const> = C.VELOCITY_MAX
-local REFRESH_RATE <const> = 30
 local VELOCITY_DECAY_SECONDS <const> = C.VELOCITY_DECAY_SECONDS
+--- The refresh rate to assume when calculating in velocity decay per frame.
+local REFRESH_RATE <const> = 30
 
---- The inertia applied to any velocity modifications
+--- The inertia applied to any velocity modifications, keyed by ring layer.
 local RING_INERTIA <const> = {
   C.PHI,
   C.PHI * 1.5,
@@ -32,6 +39,8 @@ local RING_INERTIA <const> = {
 
 class('Ring').extends()
 
+--- Creates a new instance of the Ring class.
+--- @param layer number The layer of the ring that this instance represents.
 function Ring:init(layer)
   Ring.super.init(self)
   self.layer = layer
@@ -57,7 +66,7 @@ function Ring:init(layer)
   -- printTable(self)
 end
 
---- Adds velocity to the
+--- @param change_deg number The amount of angular velocity to add, in degrees.
 function Ring:addVelocity(change_deg)
   -- Convert change radians to change degrees and make it more difficult as the layer moves outward
   local change_rad = math_rad(change_deg) / self.inertia

@@ -1,5 +1,7 @@
 --- The component for generating sound for a ring.
--- @classmod RingSoundComponent
+--- @class RingSoundComponent
+--- @field ring Ring The ring represented by this instance.
+--- @field update fun(self: RingSoundComponent) Updates this instance.
 import 'CoreLibs/object'
 
 import 'glue'
@@ -18,6 +20,7 @@ local VELOCITY_VOLUME_MAX <const> = C.VELOCITY_VOLUME_MAX
 local VELOCITY_AMP_LFO_MIN <const> = C.VELOCITY_AMP_LFO_MIN
 local VELOCITY_AMP_LFO_MAX <const> = C.VELOCITY_AMP_LFO_MAX
 
+--- The waveform to use for each sound, keyed by ring layer.
 local RING_WAVEFORMS <const> = {
   snd.kWavePOVosim,
   snd.kWaveSquare,
@@ -29,6 +32,7 @@ local RING_WAVEFORMS <const> = {
   snd.kWaveSawtooth
 }
 
+--- The base note to use for each sound, keyed by ring layer.
 local RING_NOTES <const> = {
   'E5',
   'C5',
@@ -42,6 +46,7 @@ local RING_NOTES <const> = {
   'C2'
 }
 
+--- The frequency modulation LFO depth to use for each sound, keyed by ring layer.
 local RING_FREQ_LFO_DEPTHS <const> = {
   0.004,
   0.007,
@@ -53,18 +58,37 @@ local RING_FREQ_LFO_DEPTHS <const> = {
   0.01
 }
 
+--- The global volume applied to each sound's corresponding channel.
 local CHANNEL_VOLUME <const> = 0.01
+
+--- The maximum volume for each sound's corresponding instrument.
 local INSTRUMENT_VOLUME_MAX <const> = 0.125
+
+--- The minimum rate for the amplitude modulation LFO, in hertz.
 local AMP_LFO_RATE_MIN <const> = 0.025
+
+--- The maximum rate for the amplitude modulation LFO, in hertz.
 local AMP_LFO_RATE_MAX <const> = 5
-local AMP_LFO_CENTER <const> = 0.70 -- Center on 70% amplitude
-local AMP_LFO_DEPTH <const> = 0.3 -- Range amplitude from 40-100%
+
+--- The center of the amplitude modulation LFO. Structured to vary between 40-100%.
+local AMP_LFO_CENTER <const> = 0.70
+
+--- The range of the amplitude modulation LFO. Structured to vary between 40-100%.
+local AMP_LFO_DEPTH <const> = 0.3
+
+--- The minimum rate for the frequency modulation LFO, in hertz.
 local FREQ_LFO_RATE_MIN <const> = AMP_LFO_RATE_MIN * 2
+
+--- The maximum rate for the frequency modulation LFO, in hertz.
 local FREQ_LFO_RATE_MAX <const> = AMP_LFO_RATE_MAX * 2
+
+--- The center of the frequency modulation LFO.
 local FREQ_LFO_CENTER <const> = 0 -- By default, keep the frequency where it is
 
 class('RingSoundComponent').extends()
 
+--- Creates a new instance of the RingSoundComponent class.
+--- @param ring Ring The ring entity represented by this instance.
 function RingSoundComponent:init(ring)
   RingSoundComponent.super.init(self)
   self.ring = ring
@@ -112,6 +136,7 @@ function RingSoundComponent:init(ring)
   self.channel:addSource(self.base_synth)
 end
 
+--- Updates this instance's sound based on the current state of its associated ring.
 function RingSoundComponent:update()
   if not self.base_synth then
     return

@@ -1,5 +1,8 @@
 --- The component for displaying UI elements.
--- @classmod UIComponent
+--- @class UIComponent
+--- @field rings_table table<integer, Ring> The rings in use by the application.
+--- @field update fun(self: UIComponent) Updates the state of relevant UI elements based on the rings' state.
+--- @field draw fun(self: UIComponent) Renders UI elements to the screen as appropriate.
 import 'CoreLibs/object'
 import 'CoreLibs/graphics'
 
@@ -8,15 +11,16 @@ import 'app_state'
 local C <const> = require 'constants'
 local gfx <const> = playdate.graphics
 
+local FONT_PATH <const> = 'assets/Asheville-Sans-14-Bold-Polytone'
+local TEXT_PADDING <const> = 2
 local HELP_TEXT = [[■⬆️   ⬇️▪
 ←⬅️ □ ➡️→
 ⇚Ⓑ ▣ Ⓐ⇛]]
 
-local FONT_PATH <const> = 'assets/Asheville-Sans-14-Bold-Polytone'
-local TEXT_PADDING <const> = 2
-
 class('UIComponent').extends()
 
+--- Creates a new instance of the UIComponent class.
+--- @param rings_table table<integer, Ring> The ring entities in use by the application.
 function UIComponent:init(rings_table)
   UIComponent.super.init(self)
   self.rings_table = rings_table

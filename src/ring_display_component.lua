@@ -1,5 +1,8 @@
 --- The component for visually displaying each ring.
--- @classmod RingDisplayComponent
+--- @class RingDisplayComponent
+--- @field ring Ring The ring represented by this instance.
+--- @field update fun(self: RingDisplayComponent) Updates this instance's polygon based on the current state of its associated ring.
+--- @field draw fun(self: RingDisplayComponent) Renders this instance's polygon to the screen.
 import 'CoreLibs/object'
 import 'CoreLibs/graphics'
 import 'lib/gfxp'
@@ -21,6 +24,7 @@ local POLYGON_VERTICES <const> = C.POLYGON_VERTICES
 local CENTER_X <const> = C.CENTER_X
 local CENTER_Y <const> = C.CENTER_Y
 
+--- The fills to use for each ring, keyed by ring layer.
 local RING_FILLS <const> = {
   'dot-2',
   {0xFF, 0xDD, 0xFF, 0xFF, 0xFF, 0xDD, 0xFF, 0xFF},
@@ -32,10 +36,16 @@ local RING_FILLS <const> = {
   'darkgray'
 }
 
+--- The index of the current fill to use for the selected ring.
 local selected_fill_index = 1
+
+--- The number of frames the current selected ring fill has been in use.
 local selected_fill_frame_timer = 0
-local SELECTED_FILLS_LENGTH <const> = 10
+
+--- The number of frames to stay on each selected ring fill.
 local SELECTED_FILLS_CYCLE_FRAMES <const> = 9
+
+--- The fills to cycle through for the selected ring.
 local SELECTED_FILLS <const> = {
   'white',
   'lightgray',
@@ -49,8 +59,14 @@ local SELECTED_FILLS <const> = {
   'white'
 }
 
+--- The number of available selected ring fills.
+---@diagnostic disable-next-line: undefined-field
+local SELECTED_FILLS_LENGTH <const> = table.getsize(SELECTED_FILLS)
+
 class('RingDisplayComponent').extends()
 
+--- Creates a new instance of the RingDisplayComponent class.
+--- @param ring Ring The ring entity represented by this instance.
 function RingDisplayComponent:init(ring)
   RingDisplayComponent.super.init(self)
   self.ring = ring

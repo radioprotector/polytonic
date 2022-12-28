@@ -8,7 +8,7 @@ POLYTONE_STATE = {
   --- Whether or not help information should be shown.
   show_help = true,
   --- Whether or not the background should be filled dynamically.
-  dissonance_fill_enabled = true
+  background_fill_enabled = true
 }
 
 --- Loads the application state from JSON.
@@ -17,7 +17,7 @@ function loadAppState()
 
   if file_state then
     POLYTONE_STATE.show_help = file_state.show_help
-    POLYTONE_STATE.dissonance_fill_enabled = file_state.dissonance_fill_enabled
+    POLYTONE_STATE.background_fill_enabled = file_state.background_fill_enabled
   end
 end
 

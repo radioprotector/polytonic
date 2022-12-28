@@ -1,6 +1,5 @@
 --- Contains utility constants to be shared across all files
--- @module constants
--- @alias C
+--- @class constants
 local C = {}
 local THIRD_PI = math.pi / 3
 
@@ -9,6 +8,9 @@ C.PHI = 1.618
 
 --- One-third of pi, or 60 degrees.
 C.THIRD_PI = THIRD_PI
+
+--- One-sixth of pi, or 30 degrees.
+C.SIXTH_PI = math.pi / 6
 
 --- Two pi, or 360 degrees.
 C.TWO_PI = 2 * math.pi

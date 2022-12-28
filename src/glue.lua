@@ -4,7 +4,7 @@
 local packages = {}
 
 --- Provides require syntax compatible with the Playdate SDK.
--- @tparam string name The package to include.
+--- @param name string The package to include.
 function require(name)
   return packages[name]
 end
@@ -16,21 +16,21 @@ local math_min <const> = math.min
 local math_max <const> = math.max
 
 --- Clamps a value within a specific range.
--- @tparam number val The value to clamp.
--- @tparam number low The lower bound.
--- @tparam number high The upper bound.
--- @treturn number The clamped value.
+--- @param val number The value to clamp.
+--- @param low number The lower bound.
+--- @param high number The upper bound.
+--- @return number # The clamped value.
 function math.clamp(val, low, high)
   return math_min(math_max(val, low), high)
 end
 
 --- Maps a value within one range to another range.
--- @tparam number fromVal The value to map.
--- @tparam number fromLow The lower bound of the source range.
--- @tparam number fromHigh The upper bound of the source range.
--- @tparam number toLow The lower bound of the destination range.
--- @tparam number toHigh The upper bound of the destination range.
--- @treturn number The mapped value within the destination range.
+--- @param fromVal number The value to map.
+--- @param fromLow number The lower bound of the source range.
+--- @param fromHigh number The upper bound of the source range.
+--- @param toLow number The lower bound of the destination range.
+--- @param toHigh number The upper bound of the destination range.
+--- @return number # The mapped value within the destination range.
 function math.mapLinear(fromVal, fromLow, fromHigh, toLow, toHigh)
   local scaling_factor <const> = (toHigh - toLow) / (fromHigh - fromLow)
   local ranged_value <const> = math.clamp(fromVal, fromLow, fromHigh) - fromLow
