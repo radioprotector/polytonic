@@ -67,6 +67,7 @@ end
 function UIComponent:draw()
   -- Draw the image if enabled
   if self.show_help then
+    gfx.setImageDrawMode(gfx.kDrawModeCopy)
     self.help_image:draw(self.start_x, self.start_y)
   end
 
