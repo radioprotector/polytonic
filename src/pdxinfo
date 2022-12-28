@@ -1,7 +1,7 @@
-name=polytone
+name=polytonic
 author=Cate Stock
 description=An audiovisual toy inspired by Electroplankton's Lumiloop.
-bundleID=com.radioprotector.polytone
+bundleID=com.radioprotector.polytonic
 version=0.0.1
 buildNumber=1
 imagePath=assets/images

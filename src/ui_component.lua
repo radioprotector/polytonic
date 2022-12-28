@@ -11,7 +11,7 @@ import 'app_state'
 local C <const> = require 'constants'
 local gfx <const> = playdate.graphics
 
-local FONT_PATH <const> = 'assets/Asheville-Sans-14-Bold-Polytone'
+local FONT_PATH <const> = 'assets/Asheville-Sans-14-Bold-Polytonic'
 local TEXT_PADDING <const> = 2
 local HELP_TEXT = [[■⬆️   ⬇️▪
 ←⬅️ □ ➡️→
@@ -60,7 +60,7 @@ end
 
 function UIComponent:draw()
   -- Draw the image if enabled
-  if POLYTONE_STATE.show_help then
+  if POLYTONIC_STATE.show_help then
     gfx.setImageDrawMode(gfx.kDrawModeCopy)
     self.help_image:draw(self.start_x, self.start_y)
   end

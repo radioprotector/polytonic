@@ -142,12 +142,12 @@ local function loadGame()
 
   -- Configure menu items to toggle background animation and help
   local menu <const> = playdate.getSystemMenu()
-  menu:addCheckmarkMenuItem('Animate BG', POLYTONE_STATE.background_fill_enabled, function(value)
-    POLYTONE_STATE.background_fill_enabled = value
+  menu:addCheckmarkMenuItem('Animate BG', POLYTONIC_STATE.background_fill_enabled, function(value)
+    POLYTONIC_STATE.background_fill_enabled = value
   end)
 
-  menu:addCheckmarkMenuItem('Show Help', POLYTONE_STATE.show_help, function(value)
-    POLYTONE_STATE.show_help = value
+  menu:addCheckmarkMenuItem('Show Help', POLYTONIC_STATE.show_help, function(value)
+    POLYTONIC_STATE.show_help = value
   end)
 
   -- Disable crank sounds
@@ -411,7 +411,7 @@ end
 local function drawGame()
   -- Start with a background fill.
   -- If supported, use the animated background fill.
-  if POLYTONE_STATE.background_fill_enabled then
+  if POLYTONIC_STATE.background_fill_enabled then
     gfxp.set(background_fill)
   else
     gfx.setColor(gfx.kColorBlack)
