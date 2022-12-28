@@ -24,6 +24,8 @@ local math_mapLinear <const> = math.mapLinear
 local RING_COUNT <const> = C.RING_COUNT
 local VELOCITY_PUSH_SINGLE_DEG <const> = C.VELOCITY_PUSH_SINGLE_DEG
 local VELOCITY_PUSH_GLOBAL_DEG <const> = C.VELOCITY_PUSH_GLOBAL_DEG
+local VELOCITY_BRAKE_SINGLE_SCALING <const> = C.VELOCITY_BRAKE_SINGLE_SCALING
+local VELOCITY_BRAKE_GLOBAL_SCALING <const> = C.VELOCITY_BRAKE_GLOBAL_SCALING
 local SCREEN_WIDTH <const> = C.SCREEN_WIDTH
 local SCREEN_HEIGHT <const> = C.SCREEN_HEIGHT
 local CENTER_X <const> = C.CENTER_X
@@ -118,11 +120,25 @@ local function pushSelectedRing(change_deg)
   end
 end
 
+local function decelerateSelectedRing()
+  if RINGS[selected_ring] then
+    local braked_velocity = RINGS[selected_ring].angle_velocity * VELOCITY_BRAKE_SINGLE_SCALING
+    RINGS[selected_ring].angle_velocity = braked_velocity
+  end
+end
+
 local function pushAllRings(change_deg)
   if change_deg ~= 0 then
     for _, value in pairs(RINGS) do
       value:addVelocity(change_deg)
     end
+  end
+end
+
+local function decelerateAllRings()
+  for _, value in pairs(RINGS) do
+    local braked_velocity = value.angle_velocity * VELOCITY_BRAKE_GLOBAL_SCALING
+    value.angle_velocity = braked_velocity
   end
 end
 
@@ -169,6 +185,7 @@ end
 
 function playdate.upButtonUp()
   up_key_timer:remove()
+  up_key_timer = nil
 
   -- Allow snapping back now that we've let go of the key
   allow_ring_snapback = true
@@ -184,6 +201,7 @@ end
 
 function playdate.downButtonUp()
   down_key_timer:remove()
+  down_key_timer = nil
 
   -- Allow snapping back now that we've let go of the key
   allow_ring_snapback = true
@@ -200,6 +218,7 @@ end
 
 function playdate.leftButtonUp()
   left_key_timer:remove()
+  left_key_timer = nil
 end
 
 function playdate.rightButtonDown()
@@ -213,12 +232,19 @@ end
 
 function playdate.rightButtonUp()
   right_key_timer:remove()
+  right_key_timer = nil
 end
 
 function playdate.BButtonDown()
   local function BButtonTimerCallback()
-    -- Because radians go counter-clockwise, use a positive value to go "backward"
-    pushAllRings(VELOCITY_PUSH_GLOBAL_DEG)
+
+    -- Make sure we don't have the A button held as well.
+    -- If so, don't try to push/pull.
+    if not playdate.buttonIsPressed(playdate.kButtonA) then
+      -- Because radians go counter-clockwise, use a positive value to go "backward"
+      pushAllRings(VELOCITY_PUSH_GLOBAL_DEG)
+    end
+
   end
 
   b_key_timer = timer.keyRepeatTimer(BButtonTimerCallback)
@@ -226,12 +252,29 @@ end
 
 function playdate.BButtonUp()
   b_key_timer:remove()
+  b_key_timer = nil
 end
 
 function playdate.AButtonDown()
   local function AButtonTimerCallback()
-    -- Because radians go counter-clockwise, use a negative value to go "forward"
-    pushAllRings(-VELOCITY_PUSH_GLOBAL_DEG)
+    -- First, see if the B button is also being held
+    if playdate.buttonIsPressed(playdate.kButtonB) then
+
+      -- Treat simultaneous A+B as a brake.
+      -- See if we have a selected ring. If so, brake only that ring.
+      -- Otherwise, brake all rings.
+      if RINGS[selected_ring] then
+        decelerateSelectedRing()
+      else
+        decelerateAllRings()
+      end
+
+    else
+      -- Treat as a normal A push, which is global
+      -- Because radians go counter-clockwise, use a negative value to go "forward"
+      pushAllRings(-VELOCITY_PUSH_GLOBAL_DEG)
+    end
+
   end
 
   a_key_timer = timer.keyRepeatTimer(AButtonTimerCallback)
@@ -239,6 +282,7 @@ end
 
 function playdate.AButtonUp()
   a_key_timer:remove()
+  a_key_timer = nil
 end
 
 function playdate.gameWillPause()
