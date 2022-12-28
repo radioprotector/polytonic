@@ -360,9 +360,16 @@ local function updateGame()
   -- See if the crank will accelerate or decelerate
   local change = playdate.getCrankChange()
 
-  if change ~= 0 and RINGS[selected_ring] then
-    -- Invert the change to turn counter-clockwise radians to clockwise motion
+  if change ~= 0
+    and RINGS[selected_ring]
+    and not playdate.buttonIsPressed(playdate.kButtonA)
+    and not playdate.buttonIsPressed(playdate.kButtonB) then
+
+    -- Invert the change to turn counter-clockwise motion to clockwise degrees
     pushSelectedRing(-change)
+    UI_COMPONENT.crank_active = true
+  else
+    UI_COMPONENT.crank_active = false
   end
 
   -- Update each ring, and calculate total alignment by measuring
