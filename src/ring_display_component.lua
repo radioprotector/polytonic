@@ -1,3 +1,5 @@
+--- The component for visually displaying each ring.
+-- @classmod RingDisplayComponent
 import 'CoreLibs/object'
 import 'CoreLibs/graphics'
 import 'lib/gfxp'

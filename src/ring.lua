@@ -1,3 +1,5 @@
+--- The core ring entity.
+-- @classmod Ring
 import 'CoreLibs/object'
 import 'CoreLibs/timer'
 
@@ -16,6 +18,7 @@ local VELOCITY_MAX <const> = C.VELOCITY_MAX
 local REFRESH_RATE <const> = 30
 local VELOCITY_DECAY_SECONDS <const> = C.VELOCITY_DECAY_SECONDS
 
+--- The inertia applied to any velocity modifications
 local RING_INERTIA <const> = {
   C.PHI,
   C.PHI * 1.5,
@@ -54,6 +57,7 @@ function Ring:init(layer)
   -- printTable(self)
 end
 
+--- Adds velocity to the
 function Ring:addVelocity(change_deg)
   -- Convert change radians to change degrees and make it more difficult as the layer moves outward
   local change_rad = math_rad(change_deg) / self.inertia

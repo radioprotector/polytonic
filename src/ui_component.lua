@@ -1,3 +1,5 @@
+--- The component for displaying UI elements.
+-- @classmod UIComponent
 import 'CoreLibs/object'
 import 'CoreLibs/graphics'
 

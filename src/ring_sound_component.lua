@@ -1,3 +1,5 @@
+--- The component for generating sound for a ring.
+-- @classmod RingSoundComponent
 import 'CoreLibs/object'
 
 import 'glue'
