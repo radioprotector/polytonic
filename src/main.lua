@@ -14,11 +14,6 @@ import 'ui_component'
 local C <const> = require 'constants'
 local gfx <const> = playdate.graphics
 local timer <const> = playdate.timer
-local gfxp <const> = GFXP
-
-local math_floor <const> = math.floor
-local math_fmod <const> = math.fmod
-local math_mapLinear <const> = math.mapLinear
 
 -- Localize key constants
 local RING_COUNT <const> = C.RING_COUNT
@@ -26,45 +21,7 @@ local VELOCITY_PUSH_SINGLE_DEG <const> = C.VELOCITY_PUSH_SINGLE_DEG
 local VELOCITY_PUSH_GLOBAL_DEG <const> = C.VELOCITY_PUSH_GLOBAL_DEG
 local VELOCITY_BRAKE_SINGLE_SCALING <const> = C.VELOCITY_BRAKE_SINGLE_SCALING
 local VELOCITY_BRAKE_GLOBAL_SCALING <const> = C.VELOCITY_BRAKE_GLOBAL_SCALING
-local SCREEN_WIDTH <const> = C.SCREEN_WIDTH
-local SCREEN_HEIGHT <const> = C.SCREEN_HEIGHT
 local CENTER_X <const> = C.CENTER_X
-local THIRD_PI <const> = C.THIRD_PI
-local SIXTH_PI <const> = C.SIXTH_PI
-
---- The background fills to use based on the calculated alignment level.
--- Alignment of 0 means that everything is a flat-top polygon.
--- Alignment of 100 means that everything is a pointy-top polygon.
--- Alignment of 50 means that there's no harmony.
-local ALIGNMENT_FILL_LEVELS <const> = {
-  'gray',
-  {0xAA, 0x99, 0xAA, 0x66, 0xAA, 0x99, 0xAA, 0x66},
-  {0xAA, 0x22, 0xAA, 0x88, 0xAA, 0x22, 0xAA, 0x88},
-  {0x22, 0x22, 0x88, 0x88, 0x22, 0x22, 0x88, 0x88},
-  'darkgray',
-  {0x0, 0x22, 0x0, 0x0, 0x0, 0x22, 0x0, 0x0},
-  {0x0, 0x20, 0x0, 0x0, 0x0, 0x2, 0x0, 0x0},
-  {0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0},
-  'black',
-  {0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0},
-  {0x0, 0x20, 0x0, 0x0, 0x0, 0x2, 0x0, 0x0},
-  {0x0, 0x22, 0x0, 0x0, 0x0, 0x22, 0x0, 0x0},
-  'darkgray',
-  {0x22, 0x22, 0x88, 0x88, 0x22, 0x22, 0x88, 0x88},
-  {0xAA, 0x22, 0xAA, 0x88, 0xAA, 0x22, 0xAA, 0x88},
-  {0xAA, 0x99, 0xAA, 0x66, 0xAA, 0x99, 0xAA, 0x66},
-  'gray'
-}
-
---- The number of available background fills.
----@diagnostic disable-next-line: undefined-field
-local ALIGNMENT_FILL_COUNT <const> = table.getsize(ALIGNMENT_FILL_LEVELS)
-
---- The number of frames to wait before changing the background fill.
-local BACKGROUND_UPDATE_FRAMES <const> = 15
-
---- The maximum amount of possible alignment between ring angles.
-local MAX_ALIGNMENT = SIXTH_PI * RING_COUNT
 
 -- ====================================
 -- Game state
@@ -107,18 +64,6 @@ local a_key_timer = nil
 
 --- Debounce timer for the B button.
 local b_key_timer = nil
-
---- The total amount of calculated alignment.
-local total_alignment = nil
-
---- The percentage of possible alignment.
-local total_alignment_pct = nil
-
---- The current background fill pattern to use.
-local background_fill = nil
-
---- The number of frames the current background fill pattern has been in use.
-local background_fill_frames = BACKGROUND_UPDATE_FRAMES
 
 --- Initializes the game state, core components and entities, and menus.
 local function loadGame()
@@ -372,24 +317,9 @@ local function updateGame()
     UI_COMPONENT.crank_active = false
   end
 
-  -- Update each ring, and calculate total alignment by measuring
-  -- variance from a 0/60/120/180/240/300/360-degree position,
-  -- since everything appears the same at 60-degree intervals
-  total_alignment = 0
-  total_alignment_pct = 0
-
+  -- Update each ring entity
   for _, value in pairs(RINGS) do
     value:update()
-
-    -- Calculate alignment.
-    -- If we're more than 30 degrees, we're actually closer to the next angle,
-    -- so we want to factor in distance from the next angle instead
-    local ring_alignment = math_fmod(value.angle_rad, THIRD_PI)
-    if ring_alignment > SIXTH_PI then
-      total_alignment += (THIRD_PI - ring_alignment)
-    else
-      total_alignment += ring_alignment
-    end
   end
 
   -- Update the display components associated with the rings
@@ -404,33 +334,12 @@ local function updateGame()
 
   -- Update the UI component
   UI_COMPONENT:update()
-
-  -- Calculate the total alignment percentile
-  total_alignment_pct = total_alignment / MAX_ALIGNMENT
-
-  -- Increment the number of background fill frames
-  background_fill_frames += 1
-
-  -- Calculate the background fill if it is time
-  if background_fill_frames > BACKGROUND_UPDATE_FRAMES then
-    local alignment_level <const> = math_floor(math_mapLinear(total_alignment_pct, 0.0, 1.0, 0, ALIGNMENT_FILL_COUNT - 1)) + 1
-
-    background_fill = ALIGNMENT_FILL_LEVELS[alignment_level]
-    background_fill_frames = 0
-  end
 end
 
 --- Renders all components and UI elements to screen.
 local function drawGame()
-  -- Start with a background fill.
-  -- If supported, use the animated background fill.
-  if POLYTONIC_STATE.background_fill_enabled then
-    gfxp.set(background_fill)
-  else
-    gfx.setColor(gfx.kColorBlack)
-  end
-
-  gfx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+  -- Draw the background of the UI component
+  UI_COMPONENT:drawBackground()
 
   -- Ensure all rings are drawn.
   -- Go in reverse order to render the smallest last.
@@ -438,21 +347,8 @@ local function drawGame()
     RING_DISPLAY_COMPONENTS[i]:draw()
   end
 
-  -- Render the UI component
-  UI_COMPONENT:draw()
-
-  -- DEBUG: Show FPS in the lower-right
-  playdate.drawFPS(C.SCREEN_WIDTH - 20, C.SCREEN_HEIGHT - 20)
-
-  -- -- DEBUG: Ring angles and total alignment
-  -- gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
-
-  -- for i = RING_COUNT, 1, -1 do
-  --   gfx.drawText(string.format('%.0f', math.deg(RINGS[i].angle_rad)), 0, SCREEN_HEIGHT - (20 * (i + 1)))
-  -- end
-
-  -- gfx.drawText('Align ' .. string.format('%.0f', math.deg(total_alignment)) ..
-  --   ' (' .. string.format('%.0f', total_alignment_pct * 100) .. '%)' , 0, SCREEN_HEIGHT - 20)
+  -- Render the foreground of the UI component
+  UI_COMPONENT:drawForeground()
 end
 
 loadGame()
