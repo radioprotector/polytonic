@@ -1,6 +1,5 @@
 import 'CoreLibs/object'
 import 'CoreLibs/graphics'
-import 'CoreLibs/sprites'
 import 'CoreLibs/timer'
 
 import 'glue'
@@ -24,8 +23,8 @@ local CENTER_X <const> = C.CENTER_X
 -- Game state
 -- ====================================
 local RINGS <const> = {}
-local RING_SPRITES <const> = {}
-local RING_SOUNDS <const> = {}
+local RING_DISPLAY_COMPONENTS <const> = {}
+local RING_SOUND_COMPONENTS <const> = {}
 local UI_COMPONENT = nil
 
 local selected_ring = 1
@@ -43,8 +42,8 @@ local function loadGame()
   -- Generate rings and sprite components for each ring
   for i = 1, RING_COUNT do
     RINGS[i] = Ring(i)
-    RING_SPRITES[i] = SpriteComponent(RINGS[i])
-    RING_SOUNDS[i] = SoundComponent(RINGS[i])
+    RING_DISPLAY_COMPONENTS[i] = SpriteComponent(RINGS[i])
+    RING_SOUND_COMPONENTS[i] = SoundComponent(RINGS[i])
   end
 
   -- Mark the first ring as selected
@@ -52,10 +51,6 @@ local function loadGame()
 
   -- Initialize the UI component
   UI_COMPONENT = UIComponent(RINGS)
-
-  -- Start with a black background
-  gfx.setBackgroundColor(gfx.kColorBlack)
-  gfx.clear()
 end
 
 local function pushSelectedRing(change_deg)
@@ -207,12 +202,12 @@ local function updateGame()
   end
 
   -- Update the sprite components associated with the rings
-  for _, value in pairs(RING_SPRITES) do
+  for _, value in pairs(RING_DISPLAY_COMPONENTS) do
     value:update()
   end
 
   -- Update the sound components associated with the rings
-  for _, value in pairs(RING_SOUNDS) do
+  for _, value in pairs(RING_SOUND_COMPONENTS) do
     value:update()
   end
 
@@ -221,16 +216,15 @@ local function updateGame()
 end
 
 local function drawGame()
+  -- Start with a black background
   gfx.setBackgroundColor(gfx.kColorBlack)
+  gfx.clear()
 
-  -- Ensure all ring sprites are drawn.
+  -- Ensure all rings are drawn.
   -- Go in reverse order to render the smallest last.
   for i = RING_COUNT, 1, -1 do
-    RING_SPRITES[i]:draw()
+    RING_DISPLAY_COMPONENTS[i]:draw()
   end
-
-  -- Ensure all sprites are updated
-  gfx.sprite.update()
 
   -- Render the UI component
   UI_COMPONENT:draw()

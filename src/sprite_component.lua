@@ -1,6 +1,5 @@
 import 'CoreLibs/object'
 import 'CoreLibs/graphics'
-import 'CoreLibs/sprites'
 import 'lib/gfxp'
 
 import 'glue'
@@ -17,8 +16,9 @@ local math_floor <const> = math.floor
 -- Similarly localize key constants
 local POLYGON_VERTEX_RADIANS <const> = C.POLYGON_VERTEX_RADIANS
 local POLYGON_VERTICES <const> = C.POLYGON_VERTICES
+local CENTER_X <const> = C.CENTER_X
+local CENTER_Y <const> = C.CENTER_Y
 
-local BASE_SPRITE_ZINDEX <const> = C.RING_BASE_ZINDEX
 local RING_FILLS <const> = {
   'dot-2',
   {0xFF, 0xDD, 0xFF, 0xFF, 0xFF, 0xDD, 0xFF, 0xFF},
@@ -59,17 +59,8 @@ function SpriteComponent:init(ring)
     return
   end
 
-  -- Create a polygon and an image to draw it to.
+  -- Create a polygon to track this ring
   self.polygon = geo.polygon.new(POLYGON_VERTICES)
-  self.image = gfx.image.new(self.radius * 2, self.radius * 2)
-
-  -- Initialize a sprite to use this image.
-  -- Assign a z-index that decreases as the layer increases
-  self.sprite = gfx.sprite.new(self.image)
-  self.sprite:setCenter(0, 0)
-  self.sprite:setZIndex(BASE_SPRITE_ZINDEX - ((self.ring.layer - 1) * 100))
-  self.sprite:moveTo(C.CENTER_X - self.radius, C.CENTER_Y - self.radius)
-  self.sprite:add()
 end
 
 function SpriteComponent:update()
@@ -84,8 +75,8 @@ function SpriteComponent:update()
     -- Ensure the y-coordinate is flipped so the vertices are ordered counter-clockwise around the unit circle.
     -- To center the vertices within the bounding box, ensure that each point is translated by the radius.
     local vertex_angle_rad = base_angle_rad + POLYGON_VERTEX_RADIANS[i]
-    local x = math_floor((self.radius * math_cos(vertex_angle_rad)) + self.radius)
-    local y = math_floor((-self.radius * math_sin(vertex_angle_rad)) + self.radius)
+    local x = math_floor(self.radius * math_cos(vertex_angle_rad)) + CENTER_X
+    local y = math_floor(-self.radius * math_sin(vertex_angle_rad)) + CENTER_Y
 
     self.polygon:setPointAt(i, x, y)
   end
@@ -95,54 +86,41 @@ function SpriteComponent:update()
 end
 
 function SpriteComponent:draw()
-  gfx.lockFocus(self.image)
-    self.image:clear(gfx.kColorClear)
+  -- First stroke the polygon
+  if self.ring.selected then
+    gfx.setLineWidth(4)
+    gfx.setColor(gfx.kColorWhite)
+  else
+    gfx.setLineWidth(2)
+    gfx.setColor(gfx.kColorBlack)
+  end
 
-    -- First stroke the polygon
-    if self.ring.selected then
-      gfx.setLineWidth(4)
-      gfx.setColor(gfx.kColorWhite)
-    else
-      gfx.setLineWidth(2)
-      gfx.setColor(gfx.kColorBlack)
-    end
+  gfx.setStrokeLocation(gfx.kStrokeCentered)
+  gfx.drawPolygon(self.polygon)
 
-    gfx.setStrokeLocation(gfx.kStrokeCentered)
-    gfx.drawPolygon(self.polygon)
+  -- Then fill the polygon with a pattern.
+  -- By default, each ring has its own fill style, but we have special handling
+  -- for the currently-selected ring.
+  local poly_fill = RING_FILLS[self.ring.layer]
 
-    -- Then fill the polygon with a pattern.
-    -- By default, each ring has its own fill style, but we have special handling
-    -- for the currently-selected ring.
-    local poly_fill = RING_FILLS[self.ring.layer]
+  if self.ring.selected then
+    -- Use a rudimentary timer to cycle through special fills for the selected ring
+    selected_fill_frame_timer = selected_fill_frame_timer + 1
 
-    if self.ring.selected then
-      -- Use a rudimentary timer to cycle through special fills for the selected ring
-      selected_fill_frame_timer = selected_fill_frame_timer + 1
+    if selected_fill_frame_timer > SELECTED_FILLS_CYCLE_FRAMES then
+      selected_fill_frame_timer = 0
 
-      if selected_fill_frame_timer > SELECTED_FILLS_CYCLE_FRAMES then
-        selected_fill_frame_timer = 0
+      -- Increase the index of the selected fill, with wraparound
+      selected_fill_index = selected_fill_index + 1
 
-        -- Increase the index of the selected fill, with wraparound
-        selected_fill_index = selected_fill_index + 1
-
-        if selected_fill_index > SELECTED_FILLS_LENGTH then
-          selected_fill_index = 1
-        end
+      if selected_fill_index > SELECTED_FILLS_LENGTH then
+        selected_fill_index = 1
       end
-
-      poly_fill = SELECTED_FILLS[selected_fill_index]
     end
 
-    -- If this is a string value, interpret it as a GFXP string.
-    -- Otherwise, assume it's a table
-    if type(poly_fill) == "string" then
-      gfxp.set(poly_fill)
-    else
-      gfx.setPattern(poly_fill)
-    end
+    poly_fill = SELECTED_FILLS[selected_fill_index]
+  end
 
-    gfx.fillPolygon(self.polygon)
-
-  gfx.unlockFocus(self.image)
-  self.sprite:markDirty()
+  gfxp.set(poly_fill)
+  gfx.fillPolygon(self.polygon)
 end

@@ -1,7 +1,5 @@
 import 'CoreLibs/object'
 import 'CoreLibs/graphics'
-import 'CoreLibs/ui'
-import 'CoreLibs/sprites'
 
 import 'glue'
 local C <const> = require 'constants'
@@ -11,7 +9,7 @@ local gfx <const> = playdate.graphics
 -- ⬅️/➡️/🎣 Push Ring
 -- Ⓑ/Ⓐ Push All]]
 local HELP_TEXT = [[■⬆️   ⬇️▪
-←⬅️  □  ➡️→
+←⬅️ □ ➡️→
 ⇚Ⓑ ▣ Ⓐ⇛]]
 
 local FONT_PATH <const> = 'assets/Asheville-Sans-14-Bold-Polytone'
@@ -30,6 +28,10 @@ function UIComponent:init(rings_table)
   text_width = math.ceil(text_width + (2 * TEXT_PADDING))
   text_height = math.ceil(text_height + (3 * TEXT_PADDING))
 
+  self.start_x = C.SCREEN_WIDTH - text_width
+  self.start_y = 0
+
+  -- Create a pre-rendered image with help info
   self.help_image = gfx.image.new(text_width, text_height)
   gfx.lockFocus(self.help_image)
     gfx.setColor(gfx.kColorWhite)
@@ -39,13 +41,6 @@ function UIComponent:init(rings_table)
     gfx.setFont(self.help_font)
     gfx.drawTextAligned(HELP_TEXT, text_width / 2, TEXT_PADDING, kTextAlignment.center, TEXT_PADDING)
   gfx.unlockFocus(self.help_image)
-
-  self.help_sprite = gfx.sprite.new(self.help_image)
-  self.help_sprite:setCenter(0, 0)
-  self.help_sprite:setZIndex(C.UI_BASE_ZINDEX)
-  self.help_sprite:moveTo(C.SCREEN_WIDTH - text_width, 0)
-  self.help_sprite:setVisible(self.show_help)
-  self.help_sprite:add()
 
   -- Configure a menu item to toggle help
   local menu <const> = playdate.getSystemMenu()
@@ -70,8 +65,10 @@ function UIComponent:update()
 end
 
 function UIComponent:draw()
-  -- Cascade help visibility to the sprite
-  self.help_sprite:setVisible(self.show_help)
+  -- Draw the image if enabled
+  if self.show_help then
+    self.help_image:draw(self.start_x, self.start_y)
+  end
 
   -- Show debug information in the lower-right
   playdate.drawFPS(C.SCREEN_WIDTH - 20, C.SCREEN_HEIGHT - 20)
