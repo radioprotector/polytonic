@@ -40,16 +40,26 @@ local RING_NOTES <const> = {
   'C2'
 }
 
+local RING_FREQ_LFO_DEPTHS <const> = {
+  0.004,
+  0.007,
+  0.009,
+  0.01,
+  0.01,
+  0.01,
+  0.01,
+  0.01
+}
+
 local CHANNEL_VOLUME <const> = 0.01
 local INSTRUMENT_VOLUME_MAX <const> = 0.125
 local AMP_LFO_RATE_MIN <const> = 0.025
 local AMP_LFO_RATE_MAX <const> = 5
 local AMP_LFO_CENTER <const> = 0.70 -- Center on 70% amplitude
 local AMP_LFO_DEPTH <const> = 0.3 -- Range amplitude from 40-100%
-local FREQ_LFO_RATE_MIN <const> = AMP_LFO_RATE_MIN
-local FREQ_LFO_RATE_MAX <const> = AMP_LFO_RATE_MAX / 2
+local FREQ_LFO_RATE_MIN <const> = AMP_LFO_RATE_MIN * 2
+local FREQ_LFO_RATE_MAX <const> = AMP_LFO_RATE_MAX * 2
 local FREQ_LFO_CENTER <const> = 0 -- By default, keep the frequency where it is
-local FREQ_LFO_DEPTH <const> = 0.005
 
 class('RingSoundComponent').extends()
 
@@ -58,8 +68,9 @@ function RingSoundComponent:init(ring)
   self.ring = ring
   self.base_note = RING_NOTES[self.ring.layer]
   self.waveform = RING_WAVEFORMS[self.ring.layer]
+  self.freq_lfo_depth = RING_FREQ_LFO_DEPTHS[self.ring.layer]
 
-  if not self.base_note or not self.waveform then
+  if not self.base_note or not self.waveform or not self.freq_lfo_depth then
     print("invalid ring! layer #" .. ring.layer)
     return
   end
@@ -85,7 +96,7 @@ function RingSoundComponent:init(ring)
   self.base_synth:setAmplitudeMod(self.amp_lfo)
 
   -- Create an LFO for the synth frequency
-  self.freq_lfo = snd.lfo.new(snd.kLFOTriangle)
+  self.freq_lfo = snd.lfo.new(snd.kLFOSine)
   self.freq_lfo:setCenter(FREQ_LFO_CENTER)
   self.freq_lfo:setRate(FREQ_LFO_RATE_MIN)
   self.freq_lfo:setPhase(freq_lfo_phase)
@@ -132,7 +143,7 @@ function RingSoundComponent:update()
 
     -- Only mess with the depth if the LFO is not activated
     if not self.freq_lfo_active then
-      self.freq_lfo:setDepth(FREQ_LFO_DEPTH)
+      self.freq_lfo:setDepth(self.freq_lfo_depth)
       self.freq_lfo_active = true
     end
   elseif self.freq_lfo_active then
