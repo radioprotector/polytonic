@@ -18,7 +18,6 @@ class('UIComponent').extends()
 function UIComponent:init(rings_table)
   UIComponent.super.init(self)
   self.rings_table = rings_table
-  self.show_help = true
   self.help_font = gfx.font.new(FONT_PATH)
 
   gfx.setFont(self.help_font)
