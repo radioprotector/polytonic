@@ -8,11 +8,21 @@ import 'ring'
 import 'sprite_component'
 import 'sound_component'
 import 'ui_component'
-local C <const> = require 'constants'
 
+-- Localize key modules/functions
+local C <const> = require 'constants'
 local gfx <const> = playdate.graphics
 local timer <const> = playdate.timer
 
+-- Localize key constants
+local RING_COUNT <const> = C.RING_COUNT
+local VELOCITY_PUSH_SINGLE_DEG <const> = C.VELOCITY_PUSH_SINGLE_DEG
+local VELOCITY_PUSH_GLOBAL_DEG <const> = C.VELOCITY_PUSH_GLOBAL_DEG
+local CENTER_X <const> = C.CENTER_X
+
+-- ====================================
+-- Game state
+-- ====================================
 local RINGS <const> = {}
 local RING_SPRITES <const> = {}
 local RING_SOUNDS <const> = {}
@@ -31,7 +41,7 @@ local function loadGame()
   math.randomseed(playdate.getSecondsSinceEpoch()) -- seed for math.random
 
   -- Generate rings and sprite components for each ring
-  for i = 1, C.RING_COUNT do
+  for i = 1, RING_COUNT do
     RINGS[i] = Ring(i)
     RING_SPRITES[i] = SpriteComponent(RINGS[i])
     RING_SOUNDS[i] = SoundComponent(RINGS[i])
@@ -71,13 +81,13 @@ local function changeSelectedRing(new_ring)
     end
 
     new_ring = 1
-  elseif new_ring > C.RING_COUNT + 1 then
+  elseif new_ring > RING_COUNT + 1 then
     if not allow_ring_snapback then
       return
     end
 
-    new_ring = C.RING_COUNT
-  elseif new_ring == 0 or new_ring == C.RING_COUNT + 1 then
+    new_ring = RING_COUNT
+  elseif new_ring == 0 or new_ring == RING_COUNT + 1 then
     -- Prevent snapping back until we actually let go of the key
     allow_ring_snapback = false
   end
@@ -128,7 +138,7 @@ end
 function playdate.leftButtonDown()
   local function leftButtonTimerCallback()
     -- Because radians go counter-clockwise, use a positive value to go "backward"
-    pushSelectedRing(C.VELOCITY_PUSH_SINGLE_DEG)
+    pushSelectedRing(VELOCITY_PUSH_SINGLE_DEG)
   end
 
   left_key_timer = timer.keyRepeatTimer(leftButtonTimerCallback)
@@ -141,7 +151,7 @@ end
 function playdate.rightButtonDown()
   local function rightButtonTimerCallback()
     -- Because radians go counter-clockwise, use a negative value to go "forward"
-    pushSelectedRing(-C.VELOCITY_PUSH_SINGLE_DEG)
+    pushSelectedRing(-VELOCITY_PUSH_SINGLE_DEG)
   end
 
   right_key_timer = timer.keyRepeatTimer(rightButtonTimerCallback)
@@ -154,7 +164,7 @@ end
 function playdate.BButtonDown()
   local function BButtonTimerCallback()
     -- Because radians go counter-clockwise, use a positive value to go "backward"
-    pushAllRings(C.VELOCITY_PUSH_GLOBAL_DEG)
+    pushAllRings(VELOCITY_PUSH_GLOBAL_DEG)
   end
 
   b_key_timer = timer.keyRepeatTimer(BButtonTimerCallback)
@@ -167,7 +177,7 @@ end
 function playdate.AButtonDown()
   local function AButtonTimerCallback()
     -- Because radians go counter-clockwise, use a negative value to go "forward"
-    pushAllRings(-C.VELOCITY_PUSH_GLOBAL_DEG)
+    pushAllRings(-VELOCITY_PUSH_GLOBAL_DEG)
   end
 
   a_key_timer = timer.keyRepeatTimer(AButtonTimerCallback)
@@ -179,7 +189,7 @@ end
 
 function playdate.gameWillPause()
   -- Generate a screenshot and and offset it by 1/4, which means we should show the center of the screen
-  playdate.setMenuImage(gfx.getDisplayImage(), C.CENTER_X / 2)
+  playdate.setMenuImage(gfx.getDisplayImage(), CENTER_X / 2)
 end
 
 local function updateGame()
@@ -212,6 +222,12 @@ end
 
 local function drawGame()
   gfx.setBackgroundColor(gfx.kColorBlack)
+
+  -- Ensure all ring sprites are drawn.
+  -- Go in reverse order to render the smallest last.
+  for i = RING_COUNT, 1, -1 do
+    RING_SPRITES[i]:draw()
+  end
 
   -- Ensure all sprites are updated
   gfx.sprite.update()

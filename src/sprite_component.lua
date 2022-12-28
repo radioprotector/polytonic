@@ -73,7 +73,7 @@ function SpriteComponent:init(ring)
 end
 
 function SpriteComponent:update()
-  if not self.sprite or not self.image then
+  if not self.polygon then
     return
   end
 
@@ -92,8 +92,9 @@ function SpriteComponent:update()
 
   -- Ensure the polygon is closed
   self.polygon:close()
+end
 
-  -- Now render the image
+function SpriteComponent:draw()
   gfx.lockFocus(self.image)
     self.image:clear(gfx.kColorClear)
 
