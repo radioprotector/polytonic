@@ -257,8 +257,11 @@ end
 
 function playdate.leftButtonDown()
   local function leftButtonTimerCallback()
-    -- Because radians go counter-clockwise, use a positive value to go "backward"
-    pushSelectedRing(VELOCITY_PUSH_SINGLE_DEG)
+    -- Ensure we aren't pressing A/B buttons
+    if not playdate.buttonIsPressed(playdate.kButtonA) and not playdate.buttonIsPressed(playdate.kButtonB) then
+      -- Because radians go counter-clockwise, use a positive value to go "backward"
+      pushSelectedRing(VELOCITY_PUSH_SINGLE_DEG)
+    end
   end
 
   left_key_timer = timer.keyRepeatTimer(leftButtonTimerCallback)
@@ -271,8 +274,11 @@ end
 
 function playdate.rightButtonDown()
   local function rightButtonTimerCallback()
-    -- Because radians go counter-clockwise, use a negative value to go "forward"
-    pushSelectedRing(-VELOCITY_PUSH_SINGLE_DEG)
+    -- Ensure we aren't pressing A/B buttons
+    if not playdate.buttonIsPressed(playdate.kButtonA) and not playdate.buttonIsPressed(playdate.kButtonB) then
+      -- Because radians go counter-clockwise, use a negative value to go "forward"
+      pushSelectedRing(-VELOCITY_PUSH_SINGLE_DEG)
+    end
   end
 
   right_key_timer = timer.keyRepeatTimer(rightButtonTimerCallback)
