@@ -10,7 +10,7 @@ POLYTONIC_STATE = {
   --- Whether or not the background should be filled dynamically.
   background_fill_enabled = true,
   --- Whether or not debugging information should be rendered.
-  debug = true
+  debug = false
 }
 
 --- Loads the application state from JSON.

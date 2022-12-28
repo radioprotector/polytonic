@@ -223,15 +223,15 @@ function UIComponent:drawForeground()
     -- Show FPS in the lower-right
     playdate.drawFPS(SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20)
 
-    -- -- Show ring angles and total alignment
-    -- gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+    -- Show ring angles and total alignment
+    gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
 
-    -- for i = RING_COUNT, 1, -1 do
-    --   gfx.drawText(string.format('%.0f', math.deg(self.rings_table[i].angle_rad)), 0, SCREEN_HEIGHT - (20 * (i + 1)))
-    -- end
+    for i = RING_COUNT, 1, -1 do
+      gfx.drawText(string.format('%.0f', math.deg(self.rings_table[i].angle_rad)), 0, SCREEN_HEIGHT - (20 * (i + 1)))
+    end
 
-    -- gfx.drawText('Align ' .. string.format('%.0f', math.deg(self.total_alignment)) ..
-    --   ' (' .. string.format('%.0f', self.total_alignment_pct * 100) .. '%)' , 0, SCREEN_HEIGHT - 20)
+    gfx.drawText('Align ' .. string.format('%.0f', math.deg(self.total_alignment)) ..
+      ' (' .. string.format('%.0f', self.total_alignment_pct * 100) .. '%)' , 0, SCREEN_HEIGHT - 20)
   end
 end
 
