@@ -31,7 +31,7 @@ C.POLYGON_VERTICES = 6
 C.POLYGON_VERTEX_RADIANS = {0, THIRD_PI, 2 * THIRD_PI, math.pi, 4 * THIRD_PI, 5 * THIRD_PI, 0}
 
 --- The minimum ring velocity before it is rounded to zero.
-C.VELOCITY_MIN = 0.005 * math.pi
+C.VELOCITY_MIN = 0.0075 * math.pi
 
 --- The maximum ring velocity.
 C.VELOCITY_MAX = 4 * math.pi
@@ -52,10 +52,10 @@ C.VELOCITY_PUSH_SINGLE_DEG = 20
 C.VELOCITY_PUSH_GLOBAL_DEG = 10
 
 --- The multiplier to apply to angular velocity when braking a single ring.
-C.VELOCITY_BRAKE_SINGLE_SCALING = 0.75
+C.VELOCITY_BRAKE_SINGLE_SCALING = 0.65
 
 --- The multiplier to apply to angular velocity when braking all rings at once.
-C.VELOCITY_BRAKE_GLOBAL_SCALING = 0.85
+C.VELOCITY_BRAKE_GLOBAL_SCALING = 0.75
 
 --- The period over which velocity decay is distributed.
 C.VELOCITY_DECAY_SECONDS = 10

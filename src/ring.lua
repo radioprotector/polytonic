@@ -28,13 +28,13 @@ local REFRESH_RATE <const> = 30
 --- The inertia applied to any velocity modifications, keyed by ring layer.
 local RING_INERTIA <const> = {
   C.PHI,
-  C.PHI * 1.5,
-  C.PHI * 2,
-  C.PHI * 2.5,
-  C.PHI * 3,
-  C.PHI * 3.25,
-  C.PHI * 3.5,
-  C.PHI * 4
+  C.PHI * 1.4,
+  C.PHI * 1.8,
+  C.PHI * 2.2,
+  C.PHI * 2.6,
+  C.PHI * 3.0,
+  C.PHI * 3.4,
+  C.PHI * 3.8
 }
 
 class('Ring').extends()
