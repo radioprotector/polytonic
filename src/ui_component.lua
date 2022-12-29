@@ -106,6 +106,9 @@ local BACKGROUND_UPDATE_FRAMES <const> = 15
 --- The maximum amount of possible alignment between ring angles.
 local MAX_ALIGNMENT <const> = SIXTH_PI * RING_COUNT
 
+--- The minimum number of frames to display the crank indicator on screen. Used to prevent flashing in response to small movements.
+local CRANK_DISPLAY_FRAMES <const> = 10
+
 class('UIComponent').extends()
 
 --- Creates a new instance of the UIComponent class.
@@ -113,6 +116,8 @@ class('UIComponent').extends()
 function UIComponent:init(rings_table)
   UIComponent.super.init(self)
   self.rings_table = rings_table
+  self.crank_active = false
+  self.crank_display_frames = 0
 
   -- Update background-related properties
   self.total_alignment = nil
@@ -144,6 +149,12 @@ function UIComponent:init(rings_table)
 end
 
 function UIComponent:update()
+  -- If the crank is active, reset the number of display frames.
+  if self.crank_active then
+    self.crank_display_frames = CRANK_DISPLAY_FRAMES
+  elseif self.crank_display_frames > 0 then
+    self.crank_display_frames = self.crank_display_frames - 1
+  end
 
   -- Calculate:
   -- * Whether any of the rings have velocity
@@ -269,7 +280,7 @@ function UIComponent:getCurrentActionIconText()
       action_icon = CLOCKWISE_ICON
     elseif (buttons_pressed & SINGLE_COUNTERCLOCKWISE_BUTTON) == SINGLE_COUNTERCLOCKWISE_BUTTON then
       action_icon = COUNTERCLOCKWISE_ICON
-    elseif self.crank_active then
+    elseif self.crank_display_frames > 0 then
       action_icon = CRANK_ICON
     end
   end
