@@ -30,12 +30,15 @@ local CENTER_X <const> = C.CENTER_X
 --- The ring entities in the game.
 --- @type table<integer, Ring>
 local RINGS <const> = {}
+
 --- The display components for ring entities in the game.
 --- @type table<integer, RingDisplayComponent>
 local RING_DISPLAY_COMPONENTS <const> = {}
+
 --- The sound components for ring entities in the game.
 --- @type table<integer, RingSoundComponent>
 local RING_SOUND_COMPONENTS <const> = {}
+
 --- The UI component in the game.
 --- @type UIComponent
 local UI_COMPONENT = nil
@@ -168,12 +171,24 @@ local function changeSelectedRing(new_ring)
   selected_ring = new_ring
 end
 
+--- Creates a wrapped timer that behaves similarly to the keyRepeatTimer with a slight initial delay.
+--- @param callback function The callback function to invoke.
+function wrappedKeyRepeatTimer(callback)
+  -- We want to invoke this _almost_ immediately, so use a 50ms timer
+  timer.new(50, callback)
+
+  -- Then create a timer to repeat while the key is held.
+  local hold_timer <const> = timer.new(200, callback)
+  hold_timer.repeats = true
+  return hold_timer
+end
+
 function playdate.upButtonDown()
   local function upButtonTimerCallback()
     changeSelectedRing(selected_ring + 1)
   end
 
-  up_key_timer = timer.keyRepeatTimer(upButtonTimerCallback)
+  up_key_timer = wrappedKeyRepeatTimer(upButtonTimerCallback)
 end
 
 function playdate.upButtonUp()
@@ -189,7 +204,7 @@ function playdate.downButtonDown()
     changeSelectedRing(selected_ring - 1)
   end
 
-  down_key_timer = timer.keyRepeatTimer(downButtonTimerCallback)
+  down_key_timer = wrappedKeyRepeatTimer(downButtonTimerCallback)
 end
 
 function playdate.downButtonUp()
@@ -209,7 +224,7 @@ function playdate.leftButtonDown()
     end
   end
 
-  left_key_timer = timer.keyRepeatTimer(leftButtonTimerCallback)
+  left_key_timer = wrappedKeyRepeatTimer(leftButtonTimerCallback)
 end
 
 function playdate.leftButtonUp()
@@ -226,7 +241,7 @@ function playdate.rightButtonDown()
     end
   end
 
-  right_key_timer = timer.keyRepeatTimer(rightButtonTimerCallback)
+  right_key_timer = wrappedKeyRepeatTimer(rightButtonTimerCallback)
 end
 
 function playdate.rightButtonUp()
@@ -242,11 +257,12 @@ function playdate.BButtonDown()
     if not playdate.buttonIsPressed(playdate.kButtonA) then
       -- Because radians go counter-clockwise, use a positive value to go "backward"
       pushAllRings(VELOCITY_PUSH_GLOBAL_DEG)
+      -- print('B button callback')
     end
 
   end
 
-  b_key_timer = timer.keyRepeatTimer(BButtonTimerCallback)
+  b_key_timer = wrappedKeyRepeatTimer(BButtonTimerCallback)
 end
 
 function playdate.BButtonUp()
@@ -258,7 +274,6 @@ function playdate.AButtonDown()
   local function AButtonTimerCallback()
     -- First, see if the B button is also being held
     if playdate.buttonIsPressed(playdate.kButtonB) then
-
       -- Treat simultaneous A+B as a brake.
       -- See if we have a selected ring. If so, brake only that ring.
       -- Otherwise, brake all rings.
@@ -267,16 +282,16 @@ function playdate.AButtonDown()
       else
         decelerateAllRings()
       end
-
+      -- print('A+B button callback')
     else
       -- Treat as a normal A push, which is global
       -- Because radians go counter-clockwise, use a negative value to go "forward"
       pushAllRings(-VELOCITY_PUSH_GLOBAL_DEG)
+      -- print('A button callback')
     end
-
   end
 
-  a_key_timer = timer.keyRepeatTimer(AButtonTimerCallback)
+  a_key_timer = wrappedKeyRepeatTimer(AButtonTimerCallback)
 end
 
 function playdate.AButtonUp()
