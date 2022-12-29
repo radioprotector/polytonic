@@ -202,15 +202,18 @@ function UIComponent:drawBackground()
 end
 
 function UIComponent:drawForeground()
+  -- See if we are drawing the help block
   if POLYTONIC_STATE.show_help then
-    -- Draw the help image if enabled
     gfx.setImageDrawMode(gfx.kDrawModeCopy)
     self.help_image:draw(self.help_start_x, self.help_start_y)
+  end
 
+  -- See if we are including action feedback
+  if POLYTONIC_STATE.show_help or POLYTONIC_STATE.always_show_action then
     -- See what action is being performed
     local action_icon, scope_icon = self:getCurrentActionIconText()
 
-    -- If we have both a scope and action, draw an icon representing what's being performed
+    -- If we have both a scope and action, draw the corresponding action
     if scope_icon and action_icon then
       gfx.setFont(self.help_font)
       gfx.setImageDrawMode(gfx.kDrawModeInverted)
