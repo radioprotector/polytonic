@@ -1,7 +1,6 @@
 import 'CoreLibs/object'
 import 'CoreLibs/graphics'
 import 'CoreLibs/timer'
-import 'lib/gfxp'
 
 import 'glue'
 import 'app_state'
