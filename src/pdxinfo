@@ -1,5 +1,5 @@
 name=polytonic
-author=Cate Stock (radioprotector)
+author=radioprotector
 description=An audiovisual toy inspired by Electroplankton's Lumiloop.
 bundleID=io.github.radioprotector.polytonic
 version=0.1.0
